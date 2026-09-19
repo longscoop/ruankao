@@ -146,7 +146,7 @@ No controllers, DB config, fake endpoints, or sample business data in Task 1.
 
 Tests must cover:
 - MEDIUM + CONFIDENT correct: +5.
-- MEDIUM + CONFIDENT wrong: -7.2 when this is the second consecutive wrong answer (base -6 * 1 * 1.2 confidence * 1.0 first/appropriate explicit streak case must match input semantics below).
+- MEDIUM + CONFIDENT wrong on the second consecutive wrong answer: -8.64 (base -6 * 1.0 difficulty * 1.2 confidence * 1.2 streak).
 - EASY wrong is penalized more than HARD wrong.
 - GUESS correct gains less than CONFIDENT correct.
 - third-or-later correct uses streak factor 1.2.
