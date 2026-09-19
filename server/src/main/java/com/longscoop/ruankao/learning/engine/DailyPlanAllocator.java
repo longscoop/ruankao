@@ -9,6 +9,7 @@ public final class DailyPlanAllocator {
     private static final int[] SUPPORTED_TARGETS = {15, 30, 60, 90};
     private static final double[] NORMAL_RATIOS = {0.20, 0.35, 0.25, 0.20};
     private static final double[] SPRINT_RATIOS = {0.30, 0.35, 0.10, 0.25};
+    private static final double REMAINDER_EPSILON = 1e-12;
 
     public DailyPlanAllocation allocate(
             int targetMinutes,
@@ -47,7 +48,7 @@ public final class DailyPlanAllocator {
             double bestRemainder = -1.0;
 
             for (int i = 0; i < remainders.length; i++) {
-                if (!awarded[i] && remainders[i] > bestRemainder) {
+                if (!awarded[i] && remainders[i] > bestRemainder + REMAINDER_EPSILON) {
                     bestRemainder = remainders[i];
                     bestIndex = i;
                 }
