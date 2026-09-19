@@ -26,5 +26,5 @@ jobs:
           cache: maven
           cache-dependency-path: server/pom.xml
 
-      - name: Test
-        run: mvn -B test
+      - name: Verify
+        run: mvn -B verify
