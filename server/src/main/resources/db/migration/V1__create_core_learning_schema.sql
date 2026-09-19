@@ -86,3 +86,57 @@ create table wrong_question (
     mastered_at timestamptz,
     updated_at timestamptz not null default now()
 );
+
+
+alter table exam
+    add constraint uq_exam_code unique (code),
+    add constraint ck_exam_status check (status in ('ACTIVE', 'INACTIVE'));
+
+alter table knowledge_point
+    add constraint uq_knowledge_exam_code unique (exam_id, code),
+    add constraint ck_knowledge_level check (level >= 1),
+    add constraint ck_knowledge_importance check (importance between 1 and 5),
+    add constraint ck_knowledge_exam_frequency check (exam_frequency between 0 and 100),
+    add constraint ck_knowledge_estimated_minutes check (estimated_minutes > 0),
+    add constraint ck_knowledge_status check (status in ('DRAFT', 'ACTIVE', 'INACTIVE'));
+
+alter table question
+    add constraint ck_question_type check (type in ('SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'CASE', 'ESSAY')),
+    add constraint ck_question_source check (source in ('REAL_EXAM', 'CHAPTER', 'SIMULATION', 'AI_GENERATED', 'MANUAL')),
+    add constraint ck_question_status check (status in ('DRAFT', 'REVIEW', 'PUBLISHED', 'ARCHIVED')),
+    add constraint ck_question_difficulty check (difficulty in ('EASY', 'MEDIUM', 'HARD'));
+
+alter table question_knowledge
+    add constraint uq_question_knowledge unique (question_id, knowledge_id),
+    add constraint ck_question_knowledge_weight check (weight > 0 and weight <= 1);
+
+create unique index uq_question_primary_knowledge
+    on question_knowledge(question_id)
+    where primary_flag = true;
+
+alter table answer_record
+    add constraint ck_answer_duration check (duration_seconds is null or duration_seconds >= 0),
+    add constraint ck_answer_confidence check (confidence is null or confidence in ('GUESS', 'UNCERTAIN', 'CONFIDENT')),
+    add constraint ck_answer_source check (source in (
+        'ASSESSMENT', 'DAILY_PLAN', 'CHAPTER', 'REAL_EXAM',
+        'WRONG_REVIEW', 'MOCK_EXAM', 'AI_QUIZ'
+    ));
+
+alter table user_knowledge_mastery
+    add constraint ck_mastery_score check (mastery_score between 0 and 100),
+    add constraint ck_mastery_evidence_count check (evidence_count >= 0),
+    add constraint ck_mastery_correct_streak check (correct_streak >= 0),
+    add constraint ck_mastery_wrong_streak check (wrong_streak >= 0);
+
+alter table wrong_question
+    add constraint uq_wrong_question_user_question unique (user_id, question_id),
+    add constraint ck_wrong_question_status check (status in ('ACTIVE', 'MASTERED')),
+    add constraint ck_wrong_question_wrong_count check (wrong_count >= 1),
+    add constraint ck_wrong_question_consecutive_correct check (consecutive_correct >= 0);
+
+create index idx_knowledge_exam on knowledge_point(exam_id);
+create index idx_question_exam on question(exam_id);
+create index idx_question_knowledge_question on question_knowledge(question_id);
+create index idx_question_knowledge_knowledge on question_knowledge(knowledge_id);
+create index idx_answer_user_answered on answer_record(user_id, answered_at desc);
+create index idx_wrong_question_user_status on wrong_question(user_id, status);
