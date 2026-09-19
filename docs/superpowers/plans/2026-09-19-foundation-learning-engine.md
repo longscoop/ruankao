@@ -1,6 +1,8 @@
 # Foundation + Learning Engine Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+**Status:** ✅ Completed on `feat/soft-exam-v1`; CI `mvn -B verify` is green with the Learning Engine coverage gate enabled.
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 建立可持续开发的 Spring Boot 后端基线，并用确定性、可单测的 Java 代码实现软考AI V1 Learning Engine 核心算法。
 
@@ -69,7 +71,7 @@ server/
 - Produces: Maven module `server` and main class `com.longscoop.ruankao.RuankaoApplication`.
 - Consumes: none.
 
-- [ ] **Step 1: Add build definition, CI and failing context test**
+- [x] **Step 1: Add build definition, CI and failing context test**
 
 `RuankaoApplicationTests`:
 
@@ -98,11 +100,11 @@ mvn -B test
 
 working directory: `server`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Expected: GitHub Actions fails because no `@SpringBootConfiguration` / application class exists.
 
-- [ ] **Step 3: Add minimal Spring Boot application**
+- [x] **Step 3: Add minimal Spring Boot application**
 
 ```java
 package com.longscoop.ruankao;
@@ -118,11 +120,11 @@ public class RuankaoApplication {
 }
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Expected: `mvn -B test` passes and GitHub Actions is green.
 
-- [ ] **Step 5: Self-review and commit**
+- [x] **Step 5: Self-review and commit**
 
 No controllers, DB config, fake endpoints, or sample business data in Task 1.
 
