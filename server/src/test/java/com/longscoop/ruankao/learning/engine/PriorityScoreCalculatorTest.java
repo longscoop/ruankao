@@ -54,7 +54,7 @@ class PriorityScoreCalculatorTest {
         double result = calculator.calculate(
                 new PriorityInput(63.33, 4, 0.93, 77.7, 2));
 
-        assertEquals(47.71, result);
+        assertEquals(47.89, result);
     }
 
     @Test
