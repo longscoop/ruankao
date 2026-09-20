@@ -9,6 +9,7 @@ import com.longscoop.ruankao.knowledge.KnowledgePointService;
 import com.longscoop.ruankao.knowledge.model.KnowledgeStatus;
 import com.longscoop.ruankao.learning.persistence.MasteryApplicationService;
 import com.longscoop.ruankao.learning.persistence.UserKnowledgeMasteryEntity;
+import com.longscoop.ruankao.learning.persistence.UserKnowledgeMasteryMapper;
 import com.longscoop.ruankao.support.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ class VideoProgressServiceIntegrationTest extends PostgresIntegrationTest {
     @Autowired private VideoService videoService;
     @Autowired private VideoProgressService progressService;
     @Autowired private MasteryApplicationService masteryApplicationService;
+    @Autowired private UserKnowledgeMasteryMapper masteryMapper;
 
     @Test
     void completesAtEightyFivePercentAndAppliesWeakEvidenceOnlyOnce() {
@@ -69,6 +71,17 @@ class VideoProgressServiceIntegrationTest extends PostgresIntegrationTest {
         Fixture fixture = createFixture();
 
         assertThrows(IllegalArgumentException.class, () -> progressService.update(30L, fixture.videoId(), -1));
+    }
+
+    @Test
+    void capsVideoEvidenceMasteryAtOneHundred() {
+        Fixture fixture = createFixture();
+        masteryMapper.applyDelta(40L, fixture.knowledgeId(), 99, true);
+
+        progressService.update(40L, fixture.videoId(), 8500);
+
+        assertEquals(100.0, masteryApplicationService.findMastery(40L, fixture.knowledgeId())
+                .orElseThrow().getMasteryScore());
     }
 
     private Fixture createFixture() {
