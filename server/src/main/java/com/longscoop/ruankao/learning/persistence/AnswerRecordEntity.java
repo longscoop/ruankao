@@ -22,6 +22,7 @@ public class AnswerRecordEntity {
     private Integer durationSeconds;
     private AnswerConfidence confidence;
     private AnswerSource source;
+    private String idempotencyKey;
     private Boolean masteryApplied;
     private OffsetDateTime answeredAt;
 
@@ -95,6 +96,14 @@ public class AnswerRecordEntity {
 
     public void setSource(AnswerSource source) {
         this.source = source;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public Boolean getMasteryApplied() {

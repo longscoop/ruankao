@@ -61,6 +61,71 @@ public class MasteryApplicationService {
         return entity.getId();
     }
 
+    @Transactional
+    public IdempotentAnswerRecord recordAnswerIdempotent(
+            long userId,
+            long questionId,
+            UUID sessionId,
+            String idempotencyKey,
+            String answer,
+            boolean correct,
+            Integer durationSeconds,
+            AnswerConfidence confidence,
+            AnswerSource source) {
+        if (userId <= 0 || questionId <= 0) {
+            throw new IllegalArgumentException("userId and questionId must be positive");
+        }
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            throw new IllegalArgumentException("idempotencyKey is required");
+        }
+        if (idempotencyKey.trim().length() > 128) {
+            throw new IllegalArgumentException("idempotencyKey is too long");
+        }
+        if (durationSeconds != null && durationSeconds < 0) {
+            throw new IllegalArgumentException("durationSeconds cannot be negative");
+        }
+        if (source == null) {
+            throw new IllegalArgumentException("source is required");
+        }
+
+        String normalizedKey = idempotencyKey.trim();
+        AnswerRecordEntity existing =
+                answerRecordMapper.selectByIdempotencyKey(userId, normalizedKey);
+        if (existing != null) {
+            return new IdempotentAnswerRecord(existing, false);
+        }
+
+        AnswerRecordEntity entity = new AnswerRecordEntity();
+        entity.setId(UUID.randomUUID());
+        entity.setUserId(userId);
+        entity.setQuestionId(questionId);
+        entity.setSessionId(sessionId);
+        entity.setAnswer(answer);
+        entity.setCorrect(correct);
+        entity.setDurationSeconds(durationSeconds);
+        entity.setConfidence(confidence);
+        entity.setSource(source);
+        entity.setIdempotencyKey(normalizedKey);
+        entity.setMasteryApplied(false);
+
+        boolean created = answerRecordMapper.insertIdempotent(entity) == 1;
+        AnswerRecordEntity persisted =
+                answerRecordMapper.selectByIdempotencyKey(userId, normalizedKey);
+        if (persisted == null) {
+            throw new IllegalStateException("idempotent answer was not persisted");
+        }
+        return new IdempotentAnswerRecord(persisted, created);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AnswerRecordEntity> findByIdempotencyKey(long userId, String idempotencyKey) {
+        if (userId <= 0 || idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(
+                answerRecordMapper.selectByIdempotencyKey(userId, idempotencyKey.trim()));
+    }
+
     @Transactional(readOnly = true)
     public Optional<AnswerRecordEntity> findAnswer(UUID answerId) {
         if (answerId == null) {
