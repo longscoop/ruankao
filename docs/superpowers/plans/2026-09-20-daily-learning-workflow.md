@@ -142,7 +142,12 @@ Rules:
 - correct WRONG_REVIEW -> `recordCorrectReview` using updated effective mastery.
 - repeated idempotency key cannot create a second answer record.
 
-Ruling for idempotency key storage must be explicitly designed in schema before implementation; do not use process memory.
+Idempotency ruling:
+- add nullable `answer_record.idempotency_key varchar(128)`.
+- add a PostgreSQL partial unique index on `(user_id, idempotency_key)` where the key is not null.
+- normal learner submissions require a nonblank idempotency key.
+- duplicate submissions return the existing persisted answer result and must not apply mastery or wrong-question effects again.
+- use database conflict handling; do not use process memory.
 
 ---
 
