@@ -15,7 +15,12 @@ public interface AnswerRecordMapper extends BaseMapper<AnswerRecordEntity> {
     @Update("""
             update answer_record
             set mastery_applied = true
-            where id = #{answerId    @Select("""
+            where id = #{answerId}
+              and mastery_applied = false
+            """)
+    int claimMastery(@Param("answerId") UUID answerId);
+
+    @Select("""
             select count(*)
             from answer_record ar
             join question_knowledge qk on qk.question_id = ar.question_id
@@ -28,8 +33,4 @@ public interface AnswerRecordMapper extends BaseMapper<AnswerRecordEntity> {
             @Param("userId") long userId,
             @Param("knowledgeId") long knowledgeId,
             @Param("since") OffsetDateTime since);
-}
-              and mastery_applied = false
-            """)
-    int claimMastery(@Param("answerId") UUID answerId);
 }
