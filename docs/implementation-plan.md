@@ -50,7 +50,7 @@
 详细计划：
 `docs/superpowers/plans/2026-09-20-daily-learning-workflow.md`
 
-## Phase 4 — Course / Video
+## Phase 4 — Course / Video ✅
 目标：课程和短视频可运营、可播放、可记录进度。
 
 交付：
@@ -60,6 +60,9 @@
 - >=85% 完成判定。
 - 完成视频的弱 mastery 证据。
 - StorageProvider。
+
+详细计划：
+`docs/superpowers/plans/2026-09-20-course-video.md`
 
 ## Phase 5 — AI Layer
 目标：AI 能解释题目和知识点，但不控制核心业务。

@@ -1,5 +1,7 @@
 # Course / Video Implementation Plan
 
+**Status:** ✅ Complete (2026-09-21)
+
 **Goal:** Add the V1 course/video learning domain: configurable course hierarchy, knowledge-linked videos, persistent playback progress, subtitle segments, deterministic 85% completion, one-time weak mastery evidence, and storage-provider boundaries.
 
 **Spec:** `docs/specs/soft-exam-v1.md`
