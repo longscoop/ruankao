@@ -55,4 +55,19 @@ public interface UserKnowledgeMasteryMapper extends BaseMapper<UserKnowledgeMast
             @Param("knowledgeId") long knowledgeId,
             @Param("scoreDelta") double scoreDelta,
             @Param("correct") boolean correct);
+
+    @Insert("""
+            insert into user_knowledge_mastery(
+                user_id, knowledge_id, mastery_score, evidence_count,
+                correct_streak, wrong_streak, last_effective_study_at, updated_at
+            ) values (
+                #{userId}, #{knowledgeId}, 3, 1, 0, 0, now(), now()
+            ) on conflict (user_id, knowledge_id) do update set
+                mastery_score = greatest(0::numeric, least(100::numeric,
+                    user_knowledge_mastery.mastery_score + 3)),
+                evidence_count = user_knowledge_mastery.evidence_count + 1,
+                last_effective_study_at = now(),
+                updated_at = now()
+            """)
+    int applyVideoEvidence(@Param("userId") long userId, @Param("knowledgeId") long knowledgeId);
 }
