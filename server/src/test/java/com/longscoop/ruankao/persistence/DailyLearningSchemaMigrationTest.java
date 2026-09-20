@@ -127,6 +127,9 @@ class DailyLearningSchemaMigrationTest extends PostgresIntegrationTest {
                     9001L,
                     examId);
         } finally {
+            jdbcTemplate.update("delete from assessment_session where user_id = ?", 9001L);
+            jdbcTemplate.update("delete from study_plan where user_id = ?", 9001L);
+            jdbcTemplate.update("delete from user_exam_profile where user_id = ?", 9001L);
             jdbcTemplate.update("delete from exam where code = ?", examCode);
         }
     }
