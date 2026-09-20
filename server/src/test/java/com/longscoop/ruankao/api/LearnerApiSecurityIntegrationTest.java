@@ -179,7 +179,7 @@ class LearnerApiSecurityIntegrationTest extends PostgresIntegrationTest {
         return new Fixture(userId, examId, questionId);
     }
 
-    private org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.AuthenticationRequestPostProcessor user(long userId) {
+    private org.springframework.test.web.servlet.request.RequestPostProcessor user(long userId) {
         return authentication(new UsernamePasswordAuthenticationToken(
                 new RuankaoPrincipal(userId),
                 "n/a",
