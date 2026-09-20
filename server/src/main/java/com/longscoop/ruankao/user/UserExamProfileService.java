@@ -61,6 +61,19 @@ public class UserExamProfileService {
         return Optional.ofNullable(profileMapper.selectById(userId));
     }
 
+    @Transactional
+    public void markAssessmentCompleted(long userId, long examId) {
+        int updated = profileMapper.update(
+                null,
+                Wrappers.<UserExamProfileEntity>lambdaUpdate()
+                        .eq(UserExamProfileEntity::getUserId, userId)
+                        .eq(UserExamProfileEntity::getExamId, examId)
+                        .set(UserExamProfileEntity::getAssessmentCompleted, true));
+        if (updated != 1) {
+            throw new IllegalStateException("matching user exam profile not found");
+        }
+    }
+
     @Transactional(readOnly = true)
     public long countForUser(long userId) {
         if (userId <= 0) {

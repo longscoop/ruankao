@@ -46,8 +46,22 @@ public class QuestionService {
             QuestionDifficulty difficulty,
             String content,
             List<QuestionKnowledgeLink> links) {
+        return create(examId, type, source, status, difficulty, content, null, links);
+    }
+
+    @Transactional
+    public long create(
+            long examId,
+            QuestionType type,
+            QuestionSource source,
+            QuestionStatus status,
+            QuestionDifficulty difficulty,
+            String content,
+            String standardAnswer,
+            List<QuestionKnowledgeLink> links) {
         requireEnums(type, source, status, difficulty);
         String normalizedContent = requireText(content);
+        String normalizedStandardAnswer = normalizeStandardAnswer(status, standardAnswer);
         validateLinks(examId, links);
 
         QuestionEntity question = new QuestionEntity();
@@ -57,6 +71,7 @@ public class QuestionService {
         question.setStatus(status);
         question.setDifficulty(difficulty);
         question.setContent(normalizedContent);
+        question.setStandardAnswer(normalizedStandardAnswer);
         questionMapper.insert(question);
 
         for (QuestionKnowledgeLink link : links) {
@@ -100,6 +115,16 @@ public class QuestionService {
             throw new IllegalArgumentException("content is required");
         }
         return content.trim();
+    }
+
+    private String normalizeStandardAnswer(QuestionStatus status, String standardAnswer) {
+        if (standardAnswer == null || standardAnswer.trim().isEmpty()) {
+            if (status == QuestionStatus.PUBLISHED) {
+                throw new IllegalArgumentException("published question requires a standard answer");
+            }
+            return null;
+        }
+        return standardAnswer.trim();
     }
 
     private void validateLinks(long examId, List<QuestionKnowledgeLink> links) {
