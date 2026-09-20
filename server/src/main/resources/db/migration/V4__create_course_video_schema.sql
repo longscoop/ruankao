@@ -50,7 +50,7 @@ create table video (
 create table video_knowledge_relation (
     id bigserial primary key,
     video_id bigint not null references video(id) on delete cascade,
-    knowledge_id bigint not null references knowledge_point(id) on delete restrict,
+    knowledge_id bigint not null references knowledge_point(id) on delete cascade,
     created_at timestamptz not null default now(),
     constraint uq_video_knowledge unique (video_id, knowledge_id)
 );
