@@ -23,8 +23,11 @@
 详细计划：
 `docs/superpowers/plans/2026-09-19-foundation-learning-engine.md`
 
-## Phase 2 — Exam / Knowledge / Question Persistence
+## Phase 2 — Exam / Knowledge / Question Persistence ✅
 目标：将考试、知识点、题库和用户答题持久化到 PostgreSQL。
+
+详细计划：
+`docs/superpowers/plans/2026-09-19-core-persistence.md`
 
 交付：
 - Flyway V1 schema。

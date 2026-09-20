@@ -1,5 +1,7 @@
 # Exam / Knowledge / Question Persistence Implementation Plan
 
+**Status:** ✅ Completed on `feat/soft-exam-v1`; PostgreSQL Testcontainers integration suite and `mvn -B verify` are green.
+
 > **Execution mode:** inline, task-by-task. Every behavior follows RED -> GREEN -> full suite -> self-review -> independent commit.
 
 **Goal:** Persist the V1 exam content and learning evidence model in PostgreSQL, with Flyway-managed schema, MyBatis-Plus repositories, validated question-to-knowledge weights, idempotent mastery application, and persistent wrong-question lifecycle.
