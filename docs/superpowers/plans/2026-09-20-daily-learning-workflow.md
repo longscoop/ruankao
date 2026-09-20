@@ -1,5 +1,7 @@
 # Daily Learning Workflow Implementation Plan
 
+**Status:** ✅ Completed on `feat/soft-exam-v1`; authenticated learner APIs, assessment flow, idempotent daily planning, answer orchestration, PostgreSQL integration tests, and `mvn -B verify` are green.
+
 **Goal:** Connect persisted exam content and Learning Engine into the V1 learner workflow: exam profile, assessment, idempotent daily plans, answer orchestration, and authenticated-user-facing API boundaries.
 
 **Spec:** `docs/specs/soft-exam-v1.md`

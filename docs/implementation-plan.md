@@ -36,7 +36,7 @@
 - AnswerRecord 和 mastery idempotency。
 - 错题 ACTIVE/MASTERED 生命周期。
 
-## Phase 3 — Daily Learning API
+## Phase 3 — Daily Learning API ✅
 目标：把 Learning Engine 接入用户考试档案和每日计划。
 
 交付：
@@ -45,6 +45,10 @@
 - `GET /api/v1/learning/today`。
 - study_plan / study_task 幂等生成。
 - 答题提交 -> mastery -> wrong question 的事务链。
+- authenticated principal 边界与 learner REST API。
+
+详细计划：
+`docs/superpowers/plans/2026-09-20-daily-learning-workflow.md`
 
 ## Phase 4 — Course / Video
 目标：课程和短视频可运营、可播放、可记录进度。
