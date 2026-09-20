@@ -1,6 +1,8 @@
 package com.longscoop.ruankao.question.persistence;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.longscoop.ruankao.question.model.WrongQuestionStatus;
@@ -19,6 +21,7 @@ public class WrongQuestionEntity {
     private Integer consecutiveCorrect;
     private OffsetDateTime firstWrongAt;
     private OffsetDateTime lastWrongAt;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private OffsetDateTime masteredAt;
     private OffsetDateTime updatedAt;
 
