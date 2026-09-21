@@ -42,6 +42,30 @@
       "style": {
         "navigationBarTitleText": "测试结果"
       }
+    },
+    {
+      "path": "pages/course/index",
+      "style": {
+        "navigationBarTitleText": "课程"
+      }
+    },
+    {
+      "path": "pages/course/detail",
+      "style": {
+        "navigationBarTitleText": "课程详情"
+      }
+    },
+    {
+      "path": "pages/video/detail",
+      "style": {
+        "navigationBarTitleText": "视频学习"
+      }
+    },
+    {
+      "path": "pages/knowledge/detail",
+      "style": {
+        "navigationBarTitleText": "知识点"
+      }
     }
   ],
   "globalStyle": {

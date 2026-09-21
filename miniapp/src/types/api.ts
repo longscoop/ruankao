@@ -57,3 +57,55 @@ export interface AssessmentSubmitResponse {
   totalQuestions: number
   correctQuestions: number
 }
+
+
+export interface CourseSummaryDto {
+  id: number
+  examId: number
+  title: string
+  description?: string | null
+}
+
+export interface CourseChapterDto {
+  id: number
+  courseId: number
+  title: string
+  description?: string | null
+  videos: VideoSummaryDto[]
+}
+
+export interface CourseDetailDto extends CourseSummaryDto {
+  chapters: CourseChapterDto[]
+}
+
+export interface VideoSummaryDto {
+  id: number
+  chapterId: number
+  title: string
+  description?: string | null
+  durationSeconds: number
+  freeFlag: boolean
+}
+
+export interface VideoTranscriptSegmentDto {
+  startSeconds: number
+  endSeconds: number
+  text: string
+}
+
+export interface VideoDetailDto extends VideoSummaryDto {
+  playUrl?: string | null
+  progressSeconds?: number
+  completed?: boolean
+  transcript?: VideoTranscriptSegmentDto[]
+  knowledgeIds?: number[]
+}
+
+export interface KnowledgeDetailDto {
+  id: number
+  name: string
+  description?: string | null
+  masteryScore?: number | null
+  evidenceCount: number
+  videos?: VideoSummaryDto[]
+}
