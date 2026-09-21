@@ -109,3 +109,38 @@ export interface KnowledgeDetailDto {
   evidenceCount: number
   videos?: VideoSummaryDto[]
 }
+
+
+export type PracticeSource = 'CHAPTER' | 'REAL_EXAM' | 'WRONG_REVIEW' | 'AI_QUIZ'
+
+export interface PracticeQuestionDto extends AssessmentQuestionDto {
+  source?: string
+  options?: QuestionOptionDto[]
+}
+
+export interface QuestionSessionStartResponse {
+  sessionId: string
+}
+
+export interface QuestionAnswerFeedbackDto {
+  questionId: number
+  correct: boolean
+  answerRecordId?: string
+  standardAnswer?: string | null
+  explanation?: string | null
+}
+
+export interface WrongQuestionDto {
+  id: number
+  questionId: number
+  status: 'ACTIVE' | 'MASTERED'
+  wrongCount: number
+  consecutiveCorrect?: number
+  lastWrongAt?: string
+  question?: PracticeQuestionDto
+}
+
+export interface LocalFavoriteQuestion {
+  question: PracticeQuestionDto
+  savedAt: string
+}
