@@ -121,4 +121,19 @@ class PdfContentParserTest {
                 issue.severity() == ImportIssueSeverity.ERROR
                         && issue.code().equals("MISSING_ANSWER")));
     }
+
+    @Test
+    void coverAndTableOfContentsDoNotBecomeLearnerLessons() {
+        ParsedDocument document = parser.parse(List.of(
+                new ParsedPage(1, "系统架构设计师\n第19章 大数据架构设计理论与实践\n授课：王建平", "pages/1.png"),
+                new ParsedPage(2, "目录\n1 大数据处理系统概述\n2 Lambda架构与Kappa架构\n3 大数据架构设计案例分析", "pages/2.png"),
+                new ParsedPage(4, "传统数据处理系统存在的问题\n传统数据库的数据过载问题。", "pages/4.png")
+        ));
+
+        assertEquals(1, document.lessons().size());
+        assertEquals("传统数据处理系统存在的问题", document.lessons().get(0).title());
+        assertTrue(document.knowledgeCandidates().stream()
+                .anyMatch(x -> x.name().equals("大数据处理系统概述")));
+    }
+
 }
