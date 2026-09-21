@@ -2,6 +2,8 @@ package com.longscoop.ruankao.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.longscoop.ruankao.ai.AiProvider;
+import com.longscoop.ruankao.ai.AiProviderResponse;
 import com.longscoop.ruankao.auth.RuankaoPrincipal;
 import com.longscoop.ruankao.content.persistence.LessonMapper;
 import com.longscoop.ruankao.course.model.CourseStatus;
@@ -50,6 +52,7 @@ class AdminContentImportApiIntegrationTest extends PostgresIntegrationTest {
     @Autowired CourseMapper courseMapper;
 
     @MockBean StorageProvider storageProvider;
+    @MockBean AiProvider aiProvider;
 
     @Test
     void adminCanUploadReviewConfirmAndPublishLecture() throws Exception {
@@ -115,6 +118,51 @@ class AdminContentImportApiIntegrationTest extends PostgresIntegrationTest {
         assertEquals("PUBLISHED", lessonMapper.selectById(lessonId).getStatus().name());
         assertEquals(CourseStatus.PUBLISHED,
                 courseMapper.selectById(detail.get("courseId").asLong()).getStatus());
+    }
+
+
+    @Test
+    void adminCanRequestAiStructureSuggestionWithoutChangingImportItem() throws Exception {
+        long examId = examService.create("admin-ai-import-exam", "System Architect AI", ExamStatus.ACTIVE);
+        when(storageProvider.upload(any())).thenAnswer(invocation -> {
+            var request = (com.longscoop.ruankao.storage.StorageUploadRequest) invocation.getArgument(0);
+            return new StoredObject(request.objectKey(), request.contentType(), request.contentLength());
+        });
+        when(aiProvider.complete(any())).thenReturn(
+                new AiProviderResponse("Qwen", "qwen-test",
+                        "{\"warnings\":[\"review heading\"]}", 12, 6));
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "ai-lecture.pdf", "application/pdf", lecturePdf());
+
+        String uploadBody = mockMvc.perform(multipart("/api/v1/admin/imports/pdf")
+                        .file(file)
+                        .param("examId", String.valueOf(examId))
+                        .with(admin(7003L)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String batchId = objectMapper.readTree(uploadBody).get("batchId").asText();
+
+        JsonNode detail = objectMapper.readTree(
+                mockMvc.perform(get("/api/v1/admin/imports/{id}", batchId)
+                                .with(admin(7003L)))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString());
+        long itemId = detail.get("items").get(0).get("id").asLong();
+        String originalJson = detail.get("items").get(0).get("contentJson").asText();
+
+        mockMvc.perform(post("/api/v1/admin/imports/{batchId}/items/{itemId}/ai-suggest",
+                                batchId, itemId)
+                        .with(admin(7003L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("{\"warnings\":[\"review heading\"]}"));
+
+        JsonNode after = objectMapper.readTree(
+                mockMvc.perform(get("/api/v1/admin/imports/{id}", batchId)
+                                .with(admin(7003L)))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString());
+        assertEquals(originalJson, after.get("items").get(0).get("contentJson").asText());
     }
 
     @Test
