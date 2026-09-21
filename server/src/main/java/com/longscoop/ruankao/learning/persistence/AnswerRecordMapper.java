@@ -51,6 +51,43 @@ public interface AnswerRecordMapper extends BaseMapper<AnswerRecordEntity> {
 
     @Select("""
             select count(*)
+            from answer_record
+            where user_id = #{userId}
+              and answered_at >= #{since}
+              and answered_at < #{until}
+            """)
+    long countAnsweredBetween(
+            @Param("userId") long userId,
+            @Param("since") OffsetDateTime since,
+            @Param("until") OffsetDateTime until);
+
+    @Select("""
+            select count(*)
+            from answer_record
+            where user_id = #{userId}
+              and correct = true
+              and answered_at >= #{since}
+              and answered_at < #{until}
+            """)
+    long countCorrectBetween(
+            @Param("userId") long userId,
+            @Param("since") OffsetDateTime since,
+            @Param("until") OffsetDateTime until);
+
+    @Select("""
+            select coalesce(sum(duration_seconds), 0)
+            from answer_record
+            where user_id = #{userId}
+              and answered_at >= #{since}
+              and answered_at < #{until}
+            """)
+    long sumDurationSecondsBetween(
+            @Param("userId") long userId,
+            @Param("since") OffsetDateTime since,
+            @Param("until") OffsetDateTime until);
+
+    @Select("""
+            select count(*)
             from answer_record ar
             join question_knowledge qk on qk.question_id = ar.question_id
             where ar.user_id = #{userId}

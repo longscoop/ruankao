@@ -40,4 +40,16 @@ public interface UserVideoProgressMapper {
               and mastery_applied = false
             """)
     int claimMastery(@Param("userId") long userId, @Param("videoId") long videoId);
+
+    @Select("""
+            select coalesce(sum(progress_seconds), 0)
+            from user_video_progress
+            where user_id = #{userId}
+              and last_watch_at >= #{since}
+              and last_watch_at < #{until}
+            """)
+    long sumProgressSecondsBetween(
+            @Param("userId") long userId,
+            @Param("since") java.time.OffsetDateTime since,
+            @Param("until") java.time.OffsetDateTime until);
 }
