@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -79,6 +80,18 @@ public class WrongQuestionService {
         }
         entity.setUpdatedAt(now);
         wrongQuestionMapper.updateById(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WrongQuestionEntity> listForUser(long userId) {
+        if (userId <= 0) {
+            return List.of();
+        }
+        return wrongQuestionMapper.selectList(
+                Wrappers.<WrongQuestionEntity>lambdaQuery()
+                        .eq(WrongQuestionEntity::getUserId, userId)
+                        .orderByDesc(WrongQuestionEntity::getLastWrongAt)
+                        .orderByDesc(WrongQuestionEntity::getId));
     }
 
     @Transactional(readOnly = true)

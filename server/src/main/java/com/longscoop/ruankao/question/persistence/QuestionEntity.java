@@ -21,6 +21,7 @@ public class QuestionEntity {
     private QuestionStatus status;
     private QuestionDifficulty difficulty;
     private String content;
+    private String optionsJson;
     private String standardAnswer;
     private String explanation;
     private OffsetDateTime createdAt;
@@ -80,6 +81,14 @@ public class QuestionEntity {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getOptionsJson() {
+        return optionsJson;
+    }
+
+    public void setOptionsJson(String optionsJson) {
+        this.optionsJson = optionsJson;
     }
 
     public String getStandardAnswer() {
