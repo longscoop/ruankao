@@ -1,8 +1,8 @@
-export type StudyTaskType = 'WRONG_REVIEW' | 'WEAK_KNOWLEDGE' | 'NEW_KNOWLEDGE' | 'REAL_EXAM'
+export type StudyTaskType = 'WRONG_REVIEW' | 'WEAK_POINT' | 'NEW_KNOWLEDGE' | 'REAL_EXAM'
 export type AnswerConfidence = 'GUESS' | 'UNCERTAIN' | 'CONFIDENT'
 export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'CASE' | 'ESSAY'
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD'
-export type FoundationLevel = 'BEGINNER' | 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
+export type FoundationLevel = 'ZERO' | 'SOME' | 'REVIEWING'
 
 export interface DailyTaskDto {
   taskId: number
@@ -24,6 +24,7 @@ export interface AssessmentQuestionDto {
   type: QuestionType
   difficulty: Difficulty
   content: string
+  options?: QuestionOptionDto[]
 }
 
 export interface QuestionOptionDto {

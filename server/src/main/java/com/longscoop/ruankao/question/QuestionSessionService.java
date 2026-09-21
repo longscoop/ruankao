@@ -161,6 +161,13 @@ public class QuestionSessionService {
                 question == null ? null : question.getExplanation());
     }
 
+    public List<QuestionOption> optionsFor(QuestionEntity question) {
+        if (question == null) {
+            return List.of();
+        }
+        return parseOptions(question.getOptionsJson());
+    }
+
     @Transactional(readOnly = true)
     public Optional<QuestionView> findQuestionView(long questionId) {
         QuestionEntity question = questionMapper.selectById(questionId);
@@ -248,7 +255,7 @@ public class QuestionSessionService {
                 question.getDifficulty().name(),
                 question.getContent(),
                 question.getSource().name(),
-                parseOptions(question.getOptionsJson()));
+                optionsFor(question));
     }
 
     private List<QuestionOption> parseOptions(String optionsJson) {

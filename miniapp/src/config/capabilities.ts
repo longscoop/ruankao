@@ -5,17 +5,17 @@ export interface ApiCapability {
 }
 
 const RULES: Array<[RegExp, ApiCapability]> = [
-  [/^\/api\/v1\/auth\/wechat\/login$/, { phase: 7, availableInCurrentServer: false, label: '微信登录' }],
-  [/^\/api\/v1\/exams$/, { phase: 7, availableInCurrentServer: false, label: '考试目录' }],
-  [/^\/api\/v1\/question-sessions/, { phase: 7, availableInCurrentServer: false, label: '题目会话' }],
-  [/^\/api\/v1\/users\/me\/wrong-questions$/, { phase: 7, availableInCurrentServer: false, label: '错题列表' }],
+  [/^\/api\/v1\/auth\/wechat\/login$/, { phase: 7, availableInCurrentServer: true, label: '微信登录' }],
+  [/^\/api\/v1\/exams$/, { phase: 7, availableInCurrentServer: true, label: '考试目录' }],
+  [/^\/api\/v1\/question-sessions/, { phase: 7, availableInCurrentServer: true, label: '题目会话' }],
+  [/^\/api\/v1\/users\/me\/wrong-questions$/, { phase: 7, availableInCurrentServer: true, label: '错题列表' }],
   [/^\/api\/v1\/learning\/today$/, { phase: 3, availableInCurrentServer: true, label: '今日学习' }],
   [/^\/api\/v1\/assessments/, { phase: 3, availableInCurrentServer: true, label: '摸底测试' }],
   [/^\/api\/v1\/users\/me\/exam-profile$/, { phase: 3, availableInCurrentServer: true, label: '考试档案' }],
-  [/^\/api\/v1\/courses/, { phase: 4, availableInCurrentServer: false, label: '课程接口' }],
-  [/^\/api\/v1\/videos/, { phase: 4, availableInCurrentServer: false, label: '视频接口' }],
-  [/^\/api\/v1\/ai\//, { phase: 5, availableInCurrentServer: false, label: 'AI 能力' }],
-  [/^\/api\/v1\/users\/me\/stats\/weekly$/, { phase: 7, availableInCurrentServer: false, label: '周报接口' }],
+  [/^\/api\/v1\/courses/, { phase: 4, availableInCurrentServer: true, label: '课程接口' }],
+  [/^\/api\/v1\/videos/, { phase: 4, availableInCurrentServer: true, label: '视频接口' }],
+  [/^\/api\/v1\/ai\//, { phase: 5, availableInCurrentServer: true, label: 'AI 能力' }],
+  [/^\/api\/v1\/users\/me\/stats\/weekly$/, { phase: 7, availableInCurrentServer: true, label: '周报接口' }],
 ]
 
 export function capabilityForPath(path: string): ApiCapability {

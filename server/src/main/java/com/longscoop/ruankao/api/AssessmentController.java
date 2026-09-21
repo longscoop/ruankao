@@ -5,6 +5,7 @@ import com.longscoop.ruankao.assessment.AssessmentResult;
 import com.longscoop.ruankao.assessment.AssessmentService;
 import com.longscoop.ruankao.auth.RuankaoPrincipal;
 import com.longscoop.ruankao.learning.model.AnswerConfidence;
+import com.longscoop.ruankao.question.QuestionSessionService;
 import com.longscoop.ruankao.question.persistence.QuestionEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,13 @@ import java.util.UUID;
 public class AssessmentController {
 
     private final AssessmentService assessmentService;
+    private final QuestionSessionService questionSessionService;
 
-    public AssessmentController(AssessmentService assessmentService) {
+    public AssessmentController(
+            AssessmentService assessmentService,
+            QuestionSessionService questionSessionService) {
         this.assessmentService = assessmentService;
+        this.questionSessionService = questionSessionService;
     }
 
     @PostMapping
@@ -49,7 +54,9 @@ public class AssessmentController {
             @PathVariable UUID sessionId) {
         requireOwnedSession(principal.userId(), sessionId);
         return assessmentService.listQuestions(sessionId).stream()
-                .map(AssessmentQuestionResponse::from)
+                .map(question -> AssessmentQuestionResponse.from(
+                        question,
+                        questionSessionService.optionsFor(question)))
                 .toList();
     }
 
@@ -104,14 +111,18 @@ public class AssessmentController {
             long id,
             String type,
             String difficulty,
-            String content) {
+            String content,
+            List<QuestionSessionService.QuestionOption> options) {
 
-        static AssessmentQuestionResponse from(QuestionEntity question) {
+        static AssessmentQuestionResponse from(
+                QuestionEntity question,
+                List<QuestionSessionService.QuestionOption> options) {
             return new AssessmentQuestionResponse(
                     question.getId(),
                     question.getType().name(),
                     question.getDifficulty().name(),
-                    question.getContent());
+                    question.getContent(),
+                    options);
         }
     }
 

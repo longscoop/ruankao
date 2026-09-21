@@ -9,15 +9,14 @@ const exams = ref<ExamDto[]>([])
 const examId = ref(0)
 const examDate = ref('')
 const dailyTargetMinutes = ref(30)
-const foundationLevel = ref<FoundationLevel>('BASIC')
+const foundationLevel = ref<FoundationLevel>('SOME')
 const loading = ref(false)
 const error = ref('')
 const targets = [15, 30, 60, 90]
 const levels: Array<{ value: FoundationLevel; label: string }> = [
-  { value: 'BEGINNER', label: '刚开始准备' },
-  { value: 'BASIC', label: '有一些基础' },
-  { value: 'INTERMEDIATE', label: '系统学过' },
-  { value: 'ADVANCED', label: '准备冲刺' },
+  { value: 'ZERO', label: '零基础' },
+  { value: 'SOME', label: '有一些基础' },
+  { value: 'REVIEWING', label: '正在复习/冲刺' },
 ]
 
 const selectedExamName = computed(() => exams.value.find((item) => item.id === examId.value)?.name || '请选择考试')

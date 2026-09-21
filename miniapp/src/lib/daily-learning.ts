@@ -2,7 +2,7 @@ import type { DailyPlanDto, DailyTaskDto, StudyTaskType } from '@/types/api'
 
 const LABELS: Record<StudyTaskType, string> = {
   WRONG_REVIEW: '复习错题',
-  WEAK_KNOWLEDGE: '补强薄弱点',
+  WEAK_POINT: '补强薄弱点',
   NEW_KNOWLEDGE: '学习新知识',
   REAL_EXAM: '练习真题',
 }

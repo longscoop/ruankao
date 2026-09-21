@@ -42,23 +42,14 @@ VITE_API_TIMEOUT_MS=10000
 - AI 助教：只作为解释层；后端不可用时明确降级，不生成伪回复。
 - 我的/周报：学习设置、收藏、退出登录、周统计与薄弱知识点。
 
-## 当前后端能力边界
+## 后端运行配置
 
-小程序不会用 mock 业务数据掩盖后端缺口。当前分支已能直接对接：
+当前分支已提供小程序所有页面需要的 learner API。要让真实微信、视频和 AI 在环境中可用，请配置服务端环境变量：
 
-- `PUT /api/v1/users/me/exam-profile`
-- `POST/GET /api/v1/assessments...`
-- `GET /api/v1/learning/today`
-
-以下前端契约已完成，但当前服务端还未暴露或对应 Phase 尚未实现，页面会显示明确的不可用状态：
-
-- 微信登录、考试目录。
-- Course / Video / Knowledge learner REST。
-- 通用 question-session 与错题列表 REST。
-- AI Layer。
-- 周报聚合接口。
-
-这意味着“小程序客户端 Phase 7”已具备完整交互与契约，但在上述服务端接口补齐前，相应功能不会伪装成可用。
+- `WECHAT_APP_ID` / `WECHAT_APP_SECRET`：微信 code2session。
+- `STORAGE_PUBLIC_BASE_URL`：视频 objectKey 的公开/CDN 基础地址；若 objectKey 本身是 http(s) URL 则无需配置。
+- `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` / `AI_PROVIDER_NAME`：OpenAI-compatible AI Provider，可用于 Qwen、DeepSeek、豆包兼容端点。
+- `AI_DAILY_REQUEST_LIMIT`：每日 AI 请求上限，默认 20。
 
 ## 测试原则
 
