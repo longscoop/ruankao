@@ -111,7 +111,7 @@ public class ContentImportService {
         batch.setSha256(sha256(pdfBytes));
         batch.setDetectedType(parsed.documentType());
         batch.setStatus(ImportBatchStatus.REVIEWING);
-        batch.setTitle(parsed.title());
+        batch.setTitle(effectiveTitle(parsed.title(), filename));
         batch.setPageCount(extracted.size());
         batch.setCreatedBy(createdBy);
         batchMapper.insert(batch);
@@ -206,6 +206,17 @@ public class ContentImportService {
     }
 
     @Transactional
+    public void updateBatchTitle(UUID batchId, String title) {
+        ContentImportBatchEntity batch = requireBatch(batchId);
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("title is required");
+        }
+        batch.setTitle(title.trim());
+        batch.setUpdatedAt(OffsetDateTime.now());
+        batchMapper.updateById(batch);
+    }
+
+    @Transactional
     public void approveAll(UUID batchId) {
         requireBatch(batchId);
         List<ContentImportItemEntity> items = itemMapper.selectList(
@@ -213,6 +224,17 @@ public class ContentImportService {
                         .eq(ContentImportItemEntity::getBatchId, batchId)
                         .eq(ContentImportItemEntity::getStatus, ImportItemStatus.PENDING));
         for (ContentImportItemEntity item : items) {
+            Long blockingErrors = issueMapper.selectCount(
+                    Wrappers.<ContentImportIssueEntity>lambdaQuery()
+                            .eq(ContentImportIssueEntity::getBatchId, batchId)
+                            .eq(ContentImportIssueEntity::getSeverity, ImportIssueSeverity.ERROR)
+                            .eq(ContentImportIssueEntity::getStatus, ImportIssueStatus.OPEN)
+                            .and(q -> q.isNull(ContentImportIssueEntity::getItemId)
+                                    .or()
+                                    .eq(ContentImportIssueEntity::getItemId, item.getId())));
+            if (blockingErrors != null && blockingErrors > 0) {
+                continue;
+            }
             item.setStatus(ImportItemStatus.APPROVED);
             itemMapper.updateById(item);
         }
@@ -352,6 +374,22 @@ public class ContentImportService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 unavailable", e);
         }
+    }
+
+    private String effectiveTitle(String parsedTitle, String filename) {
+        String value = parsedTitle == null ? "" : parsedTitle.trim();
+        boolean unusable = value.isBlank()
+                || value.equalsIgnoreCase("Untitled PDF")
+                || value.equals("系统架构设计师")
+                || value.equals("目录")
+                || value.matches("^\\d+\\s+.+");
+        if (!unusable) {
+            return value;
+        }
+        String fallback = filename == null ? "PDF 导入内容" : filename.trim();
+        return fallback.toLowerCase(Locale.ROOT).endsWith(".pdf")
+                ? fallback.substring(0, fallback.length() - 4)
+                : fallback;
     }
 
     private String truncate(String value, int max) {

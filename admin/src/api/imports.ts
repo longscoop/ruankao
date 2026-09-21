@@ -27,6 +27,13 @@ export function uploadPdf(examId: number, file: File) {
   })
 }
 
+export function updateImportTitle(batchId: string, title: string) {
+  return api<void>(`/api/v1/admin/imports/${batchId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ title }),
+  })
+}
+
 export function getImport(batchId: string) {
   return api<ImportDetail>(`/api/v1/admin/imports/${batchId}`)
 }

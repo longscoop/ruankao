@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   aiSuggest, approveAll, approveItem, confirmImport, getImport, getPagePreviewUrl,
-  listImports, publishKnowledge, publishLesson, publishQuestion,
+  listImports, publishKnowledge, publishLesson, publishQuestion, updateImportTitle,
   rejectItem, resolveIssue, updateItem, uploadPdf,
 } from '@/api/imports'
 import { parseKnowledgeIds, parseQuestionLinks } from '@/lib/import-review'
@@ -21,6 +21,7 @@ const editDialog = ref(false)
 const publishDialog = ref(false)
 const aiDialog = ref(false)
 const aiSuggestion = ref('')
+const batchTitle = ref('')
 const editForm = reactive({ title: '', contentJson: '' })
 const publishForm = reactive({
   knowledgeIds: '',
@@ -44,6 +45,7 @@ async function selectBatch(batch: BatchSummary) {
   loading.value = true
   try {
     detail.value = await getImport(batch.batchId)
+    batchTitle.value = detail.value.title || detail.value.filename
     pageNumber.value = detail.value.pages[0]?.pageNumber || 1
     await refreshPreview()
   } finally {
@@ -85,6 +87,14 @@ async function doUpload() {
   } finally {
     loading.value = false
   }
+}
+
+async function saveBatchTitle() {
+  if (!detail.value || !batchTitle.value.trim()) return
+  await updateImportTitle(detail.value.batchId, batchTitle.value.trim())
+  await refreshDetail()
+  await refreshList()
+  ElMessage.success('导入标题已更新')
 }
 
 async function doApproveAll() {
@@ -223,7 +233,10 @@ onMounted(refreshList)
       <template v-else>
         <div class="detail-head">
           <div>
-            <h2>{{ detail.title || detail.filename }}</h2>
+            <div class="title-edit">
+              <el-input v-model="batchTitle" style="width:420px" />
+              <el-button @click="saveBatchTitle">保存标题</el-button>
+            </div>
             <p>{{ detail.detectedType }} · {{ detail.status }} · {{ detail.pageCount }} 页</p>
           </div>
           <div class="actions">

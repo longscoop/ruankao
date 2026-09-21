@@ -60,6 +60,14 @@ public class AdminContentImportController {
         }
     }
 
+    @PutMapping("/{batchId}")
+    public ResponseEntity<Void> updateBatch(
+            @PathVariable UUID batchId,
+            @RequestBody UpdateBatchRequest request) {
+        importService.updateBatchTitle(batchId, request.title());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{batchId}")
     public ContentImportService.ImportDetail detail(@PathVariable UUID batchId) {
         return importService.get(batchId)
@@ -169,6 +177,7 @@ public class AdminContentImportController {
         return new PublishResult(id);
     }
 
+    public record UpdateBatchRequest(String title) {}
     public record ConfirmRequest(String confirmKey) {}
     public record UpdateItemRequest(String title, String contentJson) {}
     public record PublishLessonRequest(List<Long> knowledgeIds) {}
