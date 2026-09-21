@@ -9,6 +9,8 @@ import com.longscoop.ruankao.user.UserExamProfileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
+
 @Service
 public class AuthService {
 
@@ -44,6 +46,9 @@ public class AuthService {
         long userId;
         if (identity == null) {
             UserAccountEntity user = new UserAccountEntity();
+            OffsetDateTime now = OffsetDateTime.now();
+            user.setCreatedAt(now);
+            user.setUpdatedAt(now);
             userMapper.insert(user);
             userId = user.getId();
 

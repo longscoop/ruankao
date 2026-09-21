@@ -1,16 +1,18 @@
 package com.longscoop.ruankao.question.persistence;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.longscoop.ruankao.learning.model.QuestionDifficulty;
+import com.longscoop.ruankao.common.persistence.JsonbStringTypeHandler;
 import com.longscoop.ruankao.question.model.QuestionSource;
 import com.longscoop.ruankao.question.model.QuestionStatus;
 import com.longscoop.ruankao.question.model.QuestionType;
 
 import java.time.OffsetDateTime;
 
-@TableName("question")
+@TableName(value = "question", autoResultMap = true)
 public class QuestionEntity {
 
     @TableId(type = IdType.AUTO)
@@ -21,6 +23,7 @@ public class QuestionEntity {
     private QuestionStatus status;
     private QuestionDifficulty difficulty;
     private String content;
+    @TableField(typeHandler = JsonbStringTypeHandler.class)
     private String optionsJson;
     private String standardAnswer;
     private String explanation;
