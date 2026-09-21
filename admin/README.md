@@ -25,3 +25,28 @@ The current admin UI accepts an ADMIN user's Bearer session token. Promote an ex
 7. Publish lessons with explicit knowledge mapping.
 
 Nothing is automatically published by PDF parsing.
+
+
+## Server configuration for PDF imports
+
+For a simple single-node deployment, configure:
+
+```bash
+STORAGE_LOCAL_ROOT=/data/ruankao-storage
+STORAGE_PUBLIC_BASE_URL=https://assets.example.com
+```
+
+`STORAGE_LOCAL_ROOT` is where uploaded source PDFs and rendered source-page PNGs are written. `STORAGE_PUBLIC_BASE_URL` must expose those objects for admin preview and learner lesson images.
+
+For OSS/S3/COS or another object store, provide another `StorageProvider` implementation instead of using local filesystem storage.
+
+AI structure-review suggestions use the existing OpenAI-compatible provider configuration:
+
+```bash
+AI_BASE_URL=...
+AI_API_KEY=...
+AI_MODEL=...
+AI_PROVIDER_NAME=...
+```
+
+AI suggestions are advisory only. They are logged for usage accounting, do not mutate the stored import item, and cannot publish content.

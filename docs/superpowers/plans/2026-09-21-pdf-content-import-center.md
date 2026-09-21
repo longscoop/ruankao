@@ -23,8 +23,8 @@
 - Store parsed items as reviewable JSON and page provenance.
 - Confirm is idempotent.
 - Approved lecture items create DRAFT/REVIEW course/chapter/lesson content.
-- Approved question items create REVIEW questions; never publish automatically.
-- Auto-create only DRAFT knowledge candidates, with provenance.
+- Confirm materializes approved lecture items as REVIEW lessons. Question/knowledge candidates remain review items until the operator explicitly supplies the required publication metadata.
+- Questions and knowledge points are never auto-published from parser output.
 
 ## Task 4 — Review / publish workflow
 - Batch/item APIs: list, detail, approve, reject, edit structured payload, resolve issue.
@@ -46,3 +46,34 @@
 - Synthetic PDF integration test covers lecture sections + embedded question + page image preservation.
 - Admin flow covers dry run -> review -> confirm -> publish -> learner lesson/question visible.
 - Server CI, Miniapp CI, Admin CI all green before completion.
+
+
+## Completion
+
+Status: **PDF Content Import Center completed on 2026-09-21**.
+
+Implemented:
+- PDFBox page text extraction plus source-page PNG rendering.
+- QUESTION_BANK / LECTURE / MIXED / UNKNOWN classification.
+- Objective-question parsing with options, source answer and source explanation preservation.
+- Cross-page question state: a question can start on one PDF page and receive its answer/explanation on a later page.
+- Composite / ambiguous questions, missing answers and missing options are surfaced as review issues; parser output never invents missing source content.
+- Covers and table-of-contents pages are retained as source evidence but excluded from learner lesson bodies.
+- Lesson / lesson_block / lesson_knowledge persistence and question source provenance.
+- Admin-only upload, dry run, page preview, item edit/approve/reject, issue resolution, idempotent confirm and explicit publish.
+- AI-assisted structure review is suggestion-only and cannot mutate source JSON or publish content.
+- Local filesystem StorageProvider uploads for development; production can replace StorageProvider with object storage.
+- Vue 3 admin import center and learner miniapp lesson reader.
+- Mixed-PDF E2E verifies import -> review -> explicit knowledge/question/lesson publication -> learner course/lesson/practice visibility.
+
+Publication safety:
+- Knowledge point importance, exam frequency and estimated study minutes must be supplied explicitly.
+- Question difficulty, source and knowledge weights must be supplied explicitly.
+- Open ERROR issues block publication.
+- Parsing never changes a PDF answer/analysis silently and never infers that a question is a real exam question.
+- Imported lecture lessons are REVIEW until explicitly published.
+
+Final verification:
+- Server CI: **126/126 tests passed**, Maven verify / JaCoCo checks passed.
+- Admin CI: **3/3 tests passed**, vue-tsc passed, Vite production build passed.
+- Miniapp CI after learner lesson delivery: **21/21 tests passed**, vue-tsc passed, mp-weixin production build passed.

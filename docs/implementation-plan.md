@@ -78,12 +78,25 @@
 ## Phase 6 — Admin Content Workflow
 目标：运营人员可维护核心内容。
 
-交付：
-- Vue 3 admin。
-- 考试/知识点/题库/课程/视频管理。
+已完成子模块：
+- **PDF Content Import Center ✅**
+  - 题库 PDF / 知识串讲 PDF / 混合 PDF。
+  - PDFBox 文本解析 + 原始页 PNG 留存。
+  - Dry Run、源页预览、解析问题单、人工编辑/批准/驳回。
+  - 跨页题目与“典型真题”解析。
+  - AI 结构审核建议；不得覆盖原始内容或自动发布。
+  - lesson / content block / knowledge relation。
+  - 显式发布知识点、题目、讲义。
+  - Vue 3 Admin 导入中心。
+  - 小程序知识串讲阅读页。
+  - Admin CI + Server E2E。
+- 详细计划：`docs/superpowers/plans/2026-09-21-pdf-content-import-center.md`
+
+Phase 6 仍待完成：
+- 考试/知识点/题库/课程/视频的完整 CRUD 管理。
 - Excel Dry Run + confirm。
-- AI enrich -> review -> publish。
-- 内容状态机。
+- 视频运营与异步处理管理。
+- 用户、会员、订单、学习数据、AI 成本等运营页面。
 
 ## Phase 7 — Miniapp Learning Flow ✅
 目标：微信小程序跑通核心学习体验。
@@ -98,7 +111,7 @@
 - AI入口。
 - 我的/周报。
 - Miniapp CI：Node tests / vue-tsc / mp-weixin production build。
-- 对未完成的服务端能力（微信登录、课程 learner REST、通用题目会话、AI、周报聚合）显式降级，不使用 mock 业务数据伪装成功。
+- 微信登录、课程/讲义 learner REST、通用题目会话、AI、周报聚合均已端到端接通；不使用 mock 业务数据伪装成功。
 
 详细计划：
 `docs/superpowers/plans/2026-09-21-miniapp-learning-flow.md`
