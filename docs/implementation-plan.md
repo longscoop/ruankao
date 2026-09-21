@@ -85,7 +85,7 @@
 - AI enrich -> review -> publish。
 - 内容状态机。
 
-## Phase 7 — Miniapp Learning Flow
+## Phase 7 — Miniapp Learning Flow ✅
 目标：微信小程序跑通核心学习体验。
 
 交付：
@@ -97,6 +97,11 @@
 - 错题/收藏。
 - AI入口。
 - 我的/周报。
+- Miniapp CI：Node tests / vue-tsc / mp-weixin production build。
+- 对未完成的服务端能力（微信登录、课程 learner REST、通用题目会话、AI、周报聚合）显式降级，不使用 mock 业务数据伪装成功。
+
+详细计划：
+`docs/superpowers/plans/2026-09-21-miniapp-learning-flow.md`
 
 ## Phase 8 — Mock Exam + Membership
 目标：补齐 V1 付费和模拟考试闭环。

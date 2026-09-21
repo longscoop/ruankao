@@ -114,3 +114,14 @@ Deliver Phase 7 as a production-oriented uni-app + Vue 3 + TypeScript + Pinia We
 - Do not label AI-generated content as real exam content.
 - Do not hide missing backend capabilities behind fake success states.
 - WeChat secrets, API keys and production URLs must remain environment/config values.
+
+
+## Completion
+
+Status: **completed on 2026-09-21**.
+
+- Tasks 1–7 were implemented on `feat/soft-exam-v1` with focused RED→GREEN tests and independent task commits.
+- Pure TypeScript rule suite: **20/20 passing**.
+- GitHub Actions Miniapp CI: **success** — install, tests, `vue-tsc --noEmit`, and `uni build -p mp-weixin`.
+- GitHub Actions server CI for the same final code state: **success**.
+- Server capabilities that belong to unfinished backend phases or missing learner REST adapters remain explicit degraded states; the miniapp does not substitute fake business data or fake AI replies.
