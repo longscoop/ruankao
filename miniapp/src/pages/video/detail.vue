@@ -12,7 +12,7 @@ const complete=computed(()=>video.value?isVideoComplete(current.value,video.valu
 
 onLoad(async q=>{const id=Number(q?.id||0);if(!id){error.value='视频参数无效';return}loading.value=true;try{video.value=await getVideo(id);current.value=video.value.progressSeconds||0;lastReported.value=current.value}catch(e){error.value=(e as AppRequestError).message||'视频加载失败'}finally{loading.value=false}})
 async function report(force=false){if(!video.value)return;if(!force&&!shouldReportProgress(lastReported.value,current.value,video.value.durationSeconds))return;try{await updateVideoProgress(video.value.id,current.value);lastReported.value=current.value}catch{}}
-function timeupdate(e:{detail:{currentTime:number}}){current.value=e.detail.currentTime;void report(false)}
+function timeupdate(e: Event){const detail=(e as unknown as {detail:{currentTime:number}}).detail;current.value=detail.currentTime;void report(false)}
 function ended(){if(video.value){current.value=video.value.durationSeconds;void report(true)}}
 onUnload(()=>{void report(true)})
 </script>

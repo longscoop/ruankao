@@ -4,7 +4,7 @@ import { normalizeRequestError, type AppRequestError } from '@/lib/errors'
 export interface RequestOptions<T> {
   path: string
   method?: UniNamespace.RequestOptions['method']
-  data?: unknown
+  data?: UniNamespace.RequestOptions['data']
   headers?: Record<string, string>
   token?: string
   timeout?: number
