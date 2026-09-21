@@ -144,3 +144,26 @@ export interface LocalFavoriteQuestion {
   question: PracticeQuestionDto
   savedAt: string
 }
+
+
+export interface AiChatResponse {
+  content: string
+  requestId?: string
+}
+
+export interface WeeklyKnowledgeStatDto {
+  knowledgeId: number
+  name: string
+  masteryScore?: number | null
+  evidenceCount: number
+}
+
+export interface WeeklyStatsDto {
+  weekStart: string
+  weekEnd: string
+  studyMinutes: number
+  completedTasks: number
+  answeredQuestions: number
+  correctQuestions: number
+  weakKnowledge: WeeklyKnowledgeStatDto[]
+}
