@@ -37,3 +37,21 @@
 - Align DTOs/options/IDs/idempotency headers with the real server.
 - Add login -> profile -> assessment -> plan -> course/video -> practice/wrong -> AI -> weekly report integration coverage.
 - Require server CI and Miniapp CI green before marking this plan complete.
+
+
+## Completion
+
+Status: **completed on 2026-09-21**.
+
+- WeChat code exchange, persistent user identity, hashed bearer sessions, and authenticated exam catalog are implemented.
+- Course / chapter / video / transcript / progress / knowledge learner APIs are implemented against PostgreSQL and `StorageProvider`.
+- Assessment and practice questions expose real `options_json` without exposing the canonical answer before submission.
+- Practice sessions, wrong-question review, and account-synced favorites are persisted server-side.
+- AI chat and question explanation use a replaceable OpenAI-compatible `AiProvider`, with quota and usage logging; AI does not modify mastery or canonical answers.
+- Weekly analytics are aggregated from persisted answers, video progress, study tasks, and mastery evidence.
+- The miniapp contracts are aligned with server enums and all implemented page APIs are enabled.
+- A full integration test uses real PostgreSQL persistence and the real Bearer authentication filter for:
+  login -> profile -> assessment -> daily plan -> course/video -> practice/wrong -> favorite -> AI -> weekly report.
+- Final verification:
+  - server CI: **107/107 tests passed**, Maven verify / JaCoCo checks passed.
+  - miniapp CI: **21/21 tests passed**, `vue-tsc --noEmit` passed, `uni build -p mp-weixin` passed.
