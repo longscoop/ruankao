@@ -141,7 +141,6 @@ public class ContentImportReviewService {
         itemMapper.updateById(item);
     }
 
-    @Transactional(readOnly = true)
     public AiService.AiResult suggestStructure(long userId, UUID batchId, long itemId) {
         ContentImportItemEntity item = requireItem(batchId, itemId);
         return aiService.suggestContentImportStructure(userId, item.getContentJson());
