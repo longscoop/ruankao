@@ -26,7 +26,7 @@ public class PdfContentParser {
     private static final Pattern OPTION =
             Pattern.compile("^([A-D])[、.．]\\s*(.+)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern ANSWER =
-            Pattern.compile("^(?:参考答案|答案|【答案】)\\s*[:：]?\\s*([A-D]+)\\s*$",
+            Pattern.compile("^(?:参考答案|答案|【答案】)\\s*[:：]?\\s*([A-D](?:[、,，\\s]*[A-D])*)\\s*$",
                     Pattern.CASE_INSENSITIVE);
     private static final Set<String> ANALYSIS_MARKERS = Set.of(
             "试题分析", "【试题分析】", "解析", "【解析】");
@@ -37,8 +37,8 @@ public class PdfContentParser {
         }
 
         String title = detectTitle(pages);
-        List<ParsedQuestion> questions = new ArrayList<>();
         List<ParsedIssue> issues = new ArrayList<>();
+        List<ParsedQuestion> questions = parseQuestionsAcrossPages(pages, issues);
         List<ParsedLesson> lessons = new ArrayList<>();
         LinkedHashMap<String, ParsedKnowledgeCandidate> knowledge = new LinkedHashMap<>();
         int knowledgeOrder = 0;
@@ -46,9 +46,6 @@ public class PdfContentParser {
         for (ParsedPage page : pages) {
             String normalized = normalize(page.text());
             List<String> lines = lines(normalized);
-
-            List<QuestionDraft> pageQuestions = parseQuestions(page.pageNumber(), lines, issues);
-            questions.addAll(pageQuestions.stream().map(QuestionDraft::toParsed).toList());
 
             boolean hasExplicitQuestionBankShape = lines.stream()
                     .anyMatch(line -> NUMBERED_QUESTION.matcher(line).matches())
@@ -132,83 +129,114 @@ public class PdfContentParser {
                 List.copyOf(issues));
     }
 
-    private List<QuestionDraft> parseQuestions(
-            int pageNumber,
-            List<String> lines,
+    private List<ParsedQuestion> parseQuestionsAcrossPages(
+            List<ParsedPage> pages,
             List<ParsedIssue> issues) {
-        long optionLineCount = lines.stream()
-                .filter(line -> OPTION.matcher(line).matches())
-                .count();
-        boolean hasAnswerMarker = lines.stream()
-                .anyMatch(line -> ANSWER.matcher(line).matches());
-        boolean hasTypicalLabel = lines.contains("典型真题");
-        if (!hasAnswerMarker && !hasTypicalLabel && optionLineCount < 2) {
-            return List.of();
-        }
-
         List<QuestionDraft> result = new ArrayList<>();
         QuestionDraft current = null;
         String pendingLabel = null;
 
-        for (String line : lines) {
-            if (line.equals("典型真题")) {
-                pendingLabel = "典型真题";
+        for (ParsedPage page : pages) {
+            List<String> lines = lines(normalize(page.text()));
+            long optionLineCount = lines.stream()
+                    .filter(line -> OPTION.matcher(line).matches())
+                    .count();
+            boolean hasAnswerMarker = lines.stream()
+                    .anyMatch(line -> ANSWER.matcher(line).matches());
+            boolean hasTypicalLabel = lines.contains("典型真题");
+            boolean pageHasQuestionSignal = hasAnswerMarker || hasTypicalLabel || optionLineCount >= 2;
+
+            if (current != null && current.answer != null && lines.contains("目录")) {
+                finishQuestion(current, issues);
+                result.add(current);
+                current = null;
+            }
+
+            if (current == null && !pageHasQuestionSignal) {
                 continue;
             }
 
-            Matcher numbered = NUMBERED_QUESTION.matcher(line);
-            if (numbered.matches()) {
-                if (current != null) {
-                    finishQuestion(current, issues);
-                    result.add(current);
+            for (String line : lines) {
+                if (line.equals("典型真题")) {
+                    if (current != null && current.answer != null) {
+                        finishQuestion(current, issues);
+                        result.add(current);
+                        current = null;
+                    }
+                    if (current == null) {
+                        pendingLabel = "典型真题";
+                    }
+                    continue;
                 }
-                current = new QuestionDraft(
-                        pageNumber,
-                        numbered.group(1),
-                        numbered.group(2).trim(),
-                        pendingLabel);
-                pendingLabel = null;
-                continue;
-            }
 
-            if (current == null && pendingLabel != null && looksLikeQuestionStem(line)) {
-                current = new QuestionDraft(
-                        pageNumber,
-                        null,
-                        line,
-                        pendingLabel);
-                pendingLabel = null;
-                continue;
-            }
+                Matcher numbered = NUMBERED_QUESTION.matcher(line);
+                if (numbered.matches()) {
+                    if (current != null) {
+                        finishQuestion(current, issues);
+                        result.add(current);
+                    }
+                    current = new QuestionDraft(
+                            page.pageNumber(),
+                            numbered.group(1),
+                            numbered.group(2).trim(),
+                            pendingLabel);
+                    pendingLabel = null;
+                    continue;
+                }
 
-            if (current == null) {
-                continue;
-            }
+                if (current == null && pendingLabel != null && looksLikeQuestionStem(line)) {
+                    current = new QuestionDraft(
+                            page.pageNumber(),
+                            null,
+                            line,
+                            pendingLabel);
+                    pendingLabel = null;
+                    continue;
+                }
 
-            Matcher answer = ANSWER.matcher(line);
-            if (answer.matches()) {
-                current.answer = answer.group(1).toUpperCase(Locale.ROOT);
-                current.inExplanation = true;
-                continue;
-            }
+                if (current == null) {
+                    continue;
+                }
 
-            if (ANALYSIS_MARKERS.contains(line.replace("：", "").replace(":", "").trim())) {
-                current.inExplanation = true;
-                continue;
-            }
+                current.touch(page.pageNumber());
 
-            Matcher option = OPTION.matcher(line);
-            if (!current.inExplanation && option.matches()) {
-                current.options.put(
-                        option.group(1).toUpperCase(Locale.ROOT),
-                        option.group(2).trim());
-                continue;
-            }
+                Matcher answer = ANSWER.matcher(line);
+                if (answer.matches()) {
+                    current.answer = answer.group(1)
+                            .replaceAll("[^A-Da-d]", "")
+                            .toUpperCase(Locale.ROOT);
+                    current.inExplanation = true;
+                    continue;
+                }
 
-            if (current.inExplanation) {
-                current.explanation.add(line);
-            } else if (!line.isBlank()) {
-                current.content.add(line);
+                String normalizedMarker = line.replace("：", ":").trim();
+                if (normalizedMarker.startsWith("解析:")) {
+                    current.inExplanation = true;
+                    String remainder = normalizedMarker.substring("解析:".length()).trim();
+                    if (!remainder.isEmpty()) {
+                        current.explanation.add(remainder);
+                    }
+                    continue;
+                }
+                if (ANALYSIS_MARKERS.contains(line.replace("：", "").replace(":", "").trim())) {
+                    current.inExplanation = true;
+                    continue;
+                }
+
+                Matcher option = OPTION.matcher(line);
+                if (!current.inExplanation && option.matches()) {
+                    current.optionOccurrences++;
+                    current.options.put(
+                            option.group(1).toUpperCase(Locale.ROOT),
+                            option.group(2).trim());
+                    continue;
+                }
+
+                if (current.inExplanation) {
+                    current.explanation.add(line);
+                } else if (!line.isBlank()) {
+                    current.content.add(line);
+                }
             }
         }
 
@@ -216,18 +244,21 @@ public class PdfContentParser {
             finishQuestion(current, issues);
             result.add(current);
         }
-        return result;
+        return result.stream().map(QuestionDraft::toParsed).toList();
     }
 
     private void finishQuestion(QuestionDraft question, List<ParsedIssue> issues) {
-        boolean composite = question.questionNo != null && question.questionNo.contains("-");
+        boolean composite = (question.questionNo != null && question.questionNo.contains("-"))
+                || question.optionOccurrences > 4
+                || (String.join("\n", question.content).contains("（1）")
+                    && String.join("\n", question.content).contains("（2）"));
         if (composite) {
             question.requiresReview = true;
             issues.add(new ParsedIssue(
                     ImportIssueSeverity.WARNING,
                     "COMPOSITE_QUESTION",
                     "Composite question was preserved as one draft and requires manual structure review.",
-                    question.pageNumber,
+                    question.sourcePageStart,
                     question.key()));
         }
         if (question.answer == null || question.answer.isBlank()) {
@@ -236,7 +267,7 @@ public class PdfContentParser {
                     ImportIssueSeverity.ERROR,
                     "MISSING_ANSWER",
                     "No answer was found in the source. The importer did not invent one.",
-                    question.pageNumber,
+                    question.sourcePageStart,
                     question.key()));
         }
         if (question.options.size() < 2) {
@@ -245,7 +276,7 @@ public class PdfContentParser {
                     ImportIssueSeverity.ERROR,
                     "MISSING_OPTIONS",
                     "Fewer than two options were parsed from the source.",
-                    question.pageNumber,
+                    question.sourcePageStart,
                     question.key()));
         }
         if (question.answer != null && question.answer.length() > 1 && !composite) {
@@ -369,7 +400,8 @@ public class PdfContentParser {
     }
 
     private static final class QuestionDraft {
-        private final int pageNumber;
+        private final int sourcePageStart;
+        private int sourcePageEnd;
         private final String questionNo;
         private final List<String> content = new ArrayList<>();
         private final LinkedHashMap<String, String> options = new LinkedHashMap<>();
@@ -379,16 +411,22 @@ public class PdfContentParser {
         private String answer;
         private boolean inExplanation;
         private boolean requiresReview;
+        private int optionOccurrences;
 
         private QuestionDraft(int pageNumber, String questionNo, String firstLine, String sourceLabel) {
-            this.pageNumber = pageNumber;
+            this.sourcePageStart = pageNumber;
+            this.sourcePageEnd = pageNumber;
             this.questionNo = questionNo;
             this.content.add(firstLine);
             this.sourceLabel = sourceLabel;
         }
 
+        private void touch(int pageNumber) {
+            this.sourcePageEnd = Math.max(this.sourcePageEnd, pageNumber);
+        }
+
         private String key() {
-            return "question-" + pageNumber + "-" + (questionNo == null ? "embedded" : questionNo);
+            return "question-" + sourcePageStart + "-" + (questionNo == null ? "embedded" : questionNo);
         }
 
         private ParsedQuestion toParsed() {
@@ -397,12 +435,12 @@ public class PdfContentParser {
                     questionNo,
                     questionType,
                     String.join("\n", content).trim(),
-                    Map.copyOf(options),
+                    java.util.Collections.unmodifiableMap(new LinkedHashMap<>(options)),
                     answer,
                     explanation.isEmpty() ? null : String.join("\n", explanation).trim(),
                     sourceLabel,
-                    pageNumber,
-                    pageNumber,
+                    sourcePageStart,
+                    sourcePageEnd,
                     requiresReview);
         }
     }
