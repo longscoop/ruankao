@@ -49,6 +49,7 @@ class AiApiIntegrationTest extends PostgresIntegrationTest {
     @Autowired KnowledgePointService knowledgePointService;
     @Autowired QuestionService questionService;
     @Autowired AiUsageLogMapper usageLogMapper;
+    @Autowired com.longscoop.ruankao.ai.AiService aiService;
 
     @MockBean AiProvider aiProvider;
 
@@ -89,6 +90,20 @@ class AiApiIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(jsonPath("$.content").value("清晰的解释"));
 
         assertEquals(2, usageLogMapper.selectCount(null));
+    }
+
+
+    @Test
+    void contentImportSuggestionUsesAiWithoutMutatingSource() {
+        when(aiProvider.complete(any())).thenReturn(
+                new AiProviderResponse("Qwen", "qwen-test",
+                        "{\"warnings\":[\"check composite structure\"]}", 10, 6));
+
+        String source = "{\"itemType\":\"QUESTION\",\"answer\":\"C\"}";
+        var result = aiService.suggestContentImportStructure(1402L, source);
+
+        assertEquals("{\"warnings\":[\"check composite structure\"]}", result.content());
+        assertEquals(source, "{\"itemType\":\"QUESTION\",\"answer\":\"C\"}");
     }
 
     private org.springframework.test.web.servlet.request.RequestPostProcessor user(long userId) {
