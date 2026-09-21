@@ -1,7 +1,6 @@
 package com.longscoop.ruankao.storage;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -9,7 +8,6 @@ import java.net.URI;
 import java.time.Duration;
 
 @Component
-@ConditionalOnMissingBean(StorageProvider.class)
 public class ConfiguredStorageProvider implements StorageProvider {
 
     private final String publicBaseUrl;
