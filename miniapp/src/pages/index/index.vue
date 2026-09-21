@@ -32,7 +32,7 @@ onShow(load)
 
 <template>
   <view class="ruankao-page home">
-    <view class="topline"><view><text class="eyebrow">TODAY</text><text class="title">今天，继续向证书靠近一点</text></view><view class="avatar">AI</view></view>
+    <view class="topline"><view><text class="eyebrow">TODAY</text><text class="title">今天，继续向证书靠近一点</text></view><view class="avatar" @tap="uni.navigateTo({ url: '/pages/mine/index' })">我</view></view>
 
     <view v-if="!session.token" class="ruankao-card setup-card">
       <text class="card-title">先完成学习设置</text>
