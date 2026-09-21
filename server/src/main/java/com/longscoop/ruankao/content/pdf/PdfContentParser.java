@@ -56,7 +56,11 @@ public class PdfContentParser {
             boolean isTypicalQuestionPage = lines.stream()
                     .anyMatch(line -> line.equals("典型真题"));
 
-            if (!hasExplicitQuestionBankShape && !isTypicalQuestionPage) {
+            boolean isTocPage = lines.contains("目录");
+            boolean isCoverPage = lines.stream().anyMatch(line -> line.startsWith("授课"))
+                    && lines.stream().anyMatch(line -> line.matches("^第\\d+章.*"));
+
+            if (!hasExplicitQuestionBankShape && !isTypicalQuestionPage && !isTocPage && !isCoverPage) {
                 String heading = detectHeading(lines);
                 if (heading != null) {
                     String key = slug("lesson-" + heading);
