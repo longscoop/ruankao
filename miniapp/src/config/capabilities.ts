@@ -5,6 +5,8 @@ export interface ApiCapability {
 }
 
 const RULES: Array<[RegExp, ApiCapability]> = [
+  [/^\/api\/v1\/auth\/wechat\/login$/, { phase: 7, availableInCurrentServer: false, label: '微信登录' }],
+  [/^\/api\/v1\/exams$/, { phase: 7, availableInCurrentServer: false, label: '考试目录' }],
   [/^\/api\/v1\/learning\/today$/, { phase: 3, availableInCurrentServer: true, label: '今日学习' }],
   [/^\/api\/v1\/assessments/, { phase: 3, availableInCurrentServer: true, label: '摸底测试' }],
   [/^\/api\/v1\/users\/me\/exam-profile$/, { phase: 3, availableInCurrentServer: true, label: '考试档案' }],

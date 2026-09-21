@@ -25,3 +25,35 @@ export interface AssessmentQuestionDto {
   difficulty: Difficulty
   content: string
 }
+
+export interface QuestionOptionDto {
+  key: string
+  text: string
+}
+
+export interface ExamDto {
+  id: number
+  code: string
+  name: string
+}
+
+export interface WechatLoginResponse {
+  token: string
+  userId: number
+  profileCompleted?: boolean
+}
+
+export interface StartAssessmentResponse {
+  sessionId: string
+}
+
+export interface AssessmentAnswerResponse {
+  questionId: number
+  correct: boolean
+  answerRecordId: string
+}
+
+export interface AssessmentSubmitResponse {
+  totalQuestions: number
+  correctQuestions: number
+}

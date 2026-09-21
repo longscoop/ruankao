@@ -1,11 +1,11 @@
 {
   "pages": [
-    {
-      "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "软考AI"
-      }
-    }
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "软考AI" } },
+    { "path": "pages/onboarding/welcome", "style": { "navigationStyle": "custom" } },
+    { "path": "pages/onboarding/profile", "style": { "navigationBarTitleText": "学习设置" } },
+    { "path": "pages/assessment/intro", "style": { "navigationBarTitleText": "摸底测试" } },
+    { "path": "pages/assessment/session", "style": { "navigationBarTitleText": "摸底测试", "disableScroll": true } },
+    { "path": "pages/assessment/result", "style": { "navigationBarTitleText": "测试结果" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
