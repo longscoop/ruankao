@@ -136,4 +136,33 @@ class PdfContentParserTest {
                 .anyMatch(x -> x.name().equals("大数据处理系统概述")));
     }
 
+
+    @Test
+    void carriesTypicalQuestionAcrossPagesUntilAnswerAndExplanationArrive() {
+        ParsedDocument document = parser.parse(List.of(
+                new ParsedPage(26, """
+                        典型真题
+                        Lambda 架构分为三层：（1）的核心功能是存储主数据集。
+                        A. 批处理层
+                        B. 流处理层
+                        C. 加速层
+                        D. 存储层
+                        """, "pages/26.png"),
+                new ParsedPage(27, """
+                        典型真题
+                        解析：Lambda 架构的批处理层负责主数据集。
+                        答案：A
+                        """, "pages/27.png")
+        ));
+
+        assertEquals(1, document.questions().size());
+        ParsedQuestion question = document.questions().get(0);
+        assertEquals("A", question.answer());
+        assertEquals(26, question.sourcePageStart());
+        assertEquals(27, question.sourcePageEnd());
+        assertTrue(question.explanation().contains("批处理层负责主数据集"));
+        assertFalse(question.requiresReview());
+        assertFalse(document.issues().stream().anyMatch(x -> x.code().equals("MISSING_ANSWER")));
+    }
+
 }
