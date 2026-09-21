@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { listExams, updateExamProfile } from '@/api/onboarding'
+import { getExamProfile, listExams, updateExamProfile } from '@/api/onboarding'
 import { validateExamProfile } from '@/lib/profile'
 import type { AppRequestError } from '@/lib/errors'
 import type { ExamDto, FoundationLevel } from '@/types/api'
@@ -27,6 +27,19 @@ onMounted(async () => {
     if (exams.value.length === 1) examId.value = exams.value[0].id
   } catch (e) {
     error.value = (e as AppRequestError).message || '考试目录暂不可用'
+    return
+  }
+
+  try {
+    const profile = await getExamProfile()
+    examId.value = profile.examId
+    examDate.value = profile.examDate
+    dailyTargetMinutes.value = profile.dailyTargetMinutes
+    foundationLevel.value = profile.foundationLevel
+  } catch (e) {
+    if ((e as AppRequestError).code !== 'NOT_FOUND') {
+      error.value = (e as AppRequestError).message || '学习设置加载失败'
+    }
   }
 })
 

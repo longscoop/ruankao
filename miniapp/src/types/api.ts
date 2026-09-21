@@ -38,6 +38,14 @@ export interface ExamDto {
   name: string
 }
 
+export interface ExamProfileDto {
+  examId: number
+  examDate: string
+  dailyTargetMinutes: number
+  foundationLevel: FoundationLevel
+  assessmentCompleted: boolean
+}
+
 export interface WechatLoginResponse {
   token: string
   userId: number
