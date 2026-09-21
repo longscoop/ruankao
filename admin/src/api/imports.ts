@@ -56,6 +56,13 @@ export function updateItem(batchId: string, itemId: number, title: string, conte
   })
 }
 
+export function aiSuggest(batchId: string, itemId: number) {
+  return api<{ requestId: string; content: string }>(
+    `/api/v1/admin/imports/${batchId}/items/${itemId}/ai-suggest`,
+    { method: 'POST' },
+  )
+}
+
 export function resolveIssue(batchId: string, issueId: number) {
   return api<void>(`/api/v1/admin/imports/${batchId}/issues/${issueId}/resolve`, { method: 'POST' })
 }

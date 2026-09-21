@@ -115,6 +115,14 @@ public class AdminContentImportController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{batchId}/items/{itemId}/ai-suggest")
+    public com.longscoop.ruankao.ai.AiService.AiResult aiSuggest(
+            @AuthenticationPrincipal RuankaoPrincipal principal,
+            @PathVariable UUID batchId,
+            @PathVariable long itemId) {
+        return reviewService.suggestStructure(principal.userId(), batchId, itemId);
+    }
+
     @PostMapping("/{batchId}/issues/{issueId}/resolve")
     public ResponseEntity<Void> resolveIssue(
             @PathVariable UUID batchId,

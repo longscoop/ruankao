@@ -3,6 +3,7 @@ package com.longscoop.ruankao.content;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.longscoop.ruankao.ai.AiService;
 import com.longscoop.ruankao.content.model.*;
 import com.longscoop.ruankao.content.pdf.ParsedKnowledgeCandidate;
 import com.longscoop.ruankao.content.pdf.ParsedQuestion;
@@ -46,6 +47,7 @@ public class ContentImportReviewService {
     private final QuestionService questionService;
     private final QuestionMapper questionMapper;
     private final ObjectMapper objectMapper;
+    private final AiService aiService;
 
     public ContentImportReviewService(
             ContentImportBatchMapper batchMapper,
@@ -59,7 +61,8 @@ public class ContentImportReviewService {
             KnowledgePointMapper knowledgePointMapper,
             QuestionService questionService,
             QuestionMapper questionMapper,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            AiService aiService) {
         this.batchMapper = batchMapper;
         this.itemMapper = itemMapper;
         this.issueMapper = issueMapper;
@@ -72,6 +75,7 @@ public class ContentImportReviewService {
         this.questionService = questionService;
         this.questionMapper = questionMapper;
         this.objectMapper = objectMapper;
+        this.aiService = aiService;
     }
 
     @Transactional(readOnly = true)
@@ -135,6 +139,12 @@ public class ContentImportReviewService {
         item.setStatus(ImportItemStatus.PENDING);
         item.setUpdatedAt(OffsetDateTime.now());
         itemMapper.updateById(item);
+    }
+
+    @Transactional(readOnly = true)
+    public AiService.AiResult suggestStructure(long userId, UUID batchId, long itemId) {
+        ContentImportItemEntity item = requireItem(batchId, itemId);
+        return aiService.suggestContentImportStructure(userId, item.getContentJson());
     }
 
     @Transactional

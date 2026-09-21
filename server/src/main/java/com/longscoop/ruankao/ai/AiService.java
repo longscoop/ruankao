@@ -47,6 +47,28 @@ public class AiService {
                 new AiProviderRequest(STUDY_SYSTEM_PROMPT, message.trim()));
     }
 
+    public AiResult suggestContentImportStructure(long userId, String sourceJson) {
+        if (sourceJson == null || sourceJson.isBlank()) {
+            throw new IllegalArgumentException("sourceJson is required");
+        }
+        String systemPrompt = """
+                你是软考内容导入审核助手。你只能分析结构和指出疑点。
+                禁止改写、补全或纠正原始题干、原始选项、原始答案和原始解析。
+                禁止把模拟题推断成真题，禁止自动决定知识点重要度、考试频率或题目难度。
+                只返回 JSON 建议，字段包括 warnings、suggestedStructure、confidence。
+                """;
+        String prompt = """
+                请检查下面由 PDF 规则解析器得到的结构化数据。
+                只指出结构问题、字段缺失、组合题拆分建议或可能需要人工核对的位置。
+                原始结构化数据：
+                %s
+                """.formatted(sourceJson.trim());
+        return execute(
+                userId,
+                "CONTENT_IMPORT_STRUCTURE",
+                new AiProviderRequest(systemPrompt, prompt));
+    }
+
     public AiResult explainQuestion(long userId, long questionId) {
         QuestionEntity question = questionService.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("question not found"));

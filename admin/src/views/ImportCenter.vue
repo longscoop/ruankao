@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  approveAll, approveItem, confirmImport, getImport, getPagePreviewUrl,
+  aiSuggest, approveAll, approveItem, confirmImport, getImport, getPagePreviewUrl,
   listImports, publishKnowledge, publishLesson, publishQuestion,
   rejectItem, resolveIssue, updateItem, uploadPdf,
 } from '@/api/imports'
@@ -19,6 +19,8 @@ const previewUrl = ref('')
 const selectedItem = ref<ImportItem>()
 const editDialog = ref(false)
 const publishDialog = ref(false)
+const aiDialog = ref(false)
+const aiSuggestion = ref('')
 const editForm = reactive({ title: '', contentJson: '' })
 const publishForm = reactive({
   knowledgeIds: '',
@@ -166,6 +168,18 @@ async function doPublish() {
   await refreshList()
 }
 
+async function showAiSuggestion(item: ImportItem) {
+  if (!detail.value) return
+  selectedItem.value = item
+  aiSuggestion.value = 'AI 正在分析结构…'
+  aiDialog.value = true
+  try {
+    aiSuggestion.value = (await aiSuggest(detail.value.batchId, item.id)).content
+  } catch (error) {
+    aiSuggestion.value = error instanceof Error ? error.message : 'AI 建议获取失败'
+  }
+}
+
 async function resolve(issueId: number) {
   if (!detail.value) return
   await ElMessageBox.confirm('确认已人工核对并解决这个解析问题？', '解决问题')
@@ -266,6 +280,7 @@ onMounted(refreshList)
             <el-table-column label="审核/发布" width="310">
               <template #default="{ row }">
                 <el-button link @click="openEdit(row)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">编辑</el-button>
+                <el-button link type="warning" @click="showAiSuggestion(row)">AI建议</el-button>
                 <el-button link type="success" @click="setItemStatus(row,true)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">批准</el-button>
                 <el-button link type="danger" @click="setItemStatus(row,false)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">驳回</el-button>
                 <el-button link type="primary" @click="openPublish(row)" :disabled="row.itemType==='LESSON' ? row.status!=='MATERIALIZED' : row.status!=='APPROVED'">发布</el-button>
@@ -282,6 +297,11 @@ onMounted(refreshList)
         <el-form-item label="结构化 JSON"><el-input v-model="editForm.contentJson" type="textarea" :rows="18" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="editDialog=false">取消</el-button><el-button type="primary" @click="saveEdit">保存并重新审核</el-button></template>
+    </el-dialog>
+
+    <el-dialog v-model="aiDialog" title="AI 结构审核建议" width="680px">
+      <el-alert type="warning" :closable="false" title="AI 只提供结构建议，不会覆盖原始内容或自动发布。" />
+      <pre class="ai-suggestion">{{ aiSuggestion }}</pre>
     </el-dialog>
 
     <el-dialog v-model="publishDialog" :title="`发布 ${selectedItem?.itemType || ''}`" width="560px">
