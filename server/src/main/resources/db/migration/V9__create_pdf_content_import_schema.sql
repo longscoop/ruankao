@@ -60,6 +60,7 @@ create table content_import_batch (
     title varchar(512),
     page_count integer not null default 0,
     created_by bigint not null,
+    materialized_course_id bigint references course(id) on delete set null,
     confirm_key varchar(160),
     confirmed_at timestamptz,
     published_at timestamptz,

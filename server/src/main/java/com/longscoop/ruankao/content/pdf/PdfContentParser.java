@@ -14,7 +14,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PdfContentParser {
 
     private static final Pattern NUMBERED_QUESTION =
@@ -130,6 +132,16 @@ public class PdfContentParser {
             int pageNumber,
             List<String> lines,
             List<ParsedIssue> issues) {
+        long optionLineCount = lines.stream()
+                .filter(line -> OPTION.matcher(line).matches())
+                .count();
+        boolean hasAnswerMarker = lines.stream()
+                .anyMatch(line -> ANSWER.matcher(line).matches());
+        boolean hasTypicalLabel = lines.contains("典型真题");
+        if (!hasAnswerMarker && !hasTypicalLabel && optionLineCount < 2) {
+            return List.of();
+        }
+
         List<QuestionDraft> result = new ArrayList<>();
         QuestionDraft current = null;
         String pendingLabel = null;

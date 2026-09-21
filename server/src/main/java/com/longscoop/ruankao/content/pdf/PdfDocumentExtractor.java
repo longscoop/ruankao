@@ -11,7 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PdfDocumentExtractor {
 
     public List<ExtractedPdfPage> extract(byte[] pdfBytes) {
