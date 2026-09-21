@@ -6,9 +6,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+
+    private final BearerTokenAuthenticationFilter bearerTokenAuthenticationFilter;
+
+    public SecurityConfig(BearerTokenAuthenticationFilter bearerTokenAuthenticationFilter) {
+        this.bearerTokenAuthenticationFilter = bearerTokenAuthenticationFilter;
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -25,8 +32,11 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, error) ->
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN)))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/error", "/api/v1/auth/wechat/login").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(
+                        bearerTokenAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
