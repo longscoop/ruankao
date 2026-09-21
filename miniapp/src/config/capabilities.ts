@@ -9,6 +9,7 @@ const RULES: Array<[RegExp, ApiCapability]> = [
   [/^\/api\/v1\/exams$/, { phase: 7, availableInCurrentServer: true, label: '考试目录' }],
   [/^\/api\/v1\/question-sessions/, { phase: 7, availableInCurrentServer: true, label: '题目会话' }],
   [/^\/api\/v1\/users\/me\/wrong-questions$/, { phase: 7, availableInCurrentServer: true, label: '错题列表' }],
+  [/^\/api\/v1\/users\/me\/favorites/, { phase: 7, availableInCurrentServer: true, label: '收藏' }],
   [/^\/api\/v1\/learning\/today$/, { phase: 3, availableInCurrentServer: true, label: '今日学习' }],
   [/^\/api\/v1\/assessments/, { phase: 3, availableInCurrentServer: true, label: '摸底测试' }],
   [/^\/api\/v1\/users\/me\/exam-profile$/, { phase: 3, availableInCurrentServer: true, label: '考试档案' }],
