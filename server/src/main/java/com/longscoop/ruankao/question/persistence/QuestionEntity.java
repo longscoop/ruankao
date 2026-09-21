@@ -11,6 +11,7 @@ import com.longscoop.ruankao.question.model.QuestionStatus;
 import com.longscoop.ruankao.question.model.QuestionType;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @TableName(value = "question", autoResultMap = true)
 public class QuestionEntity {
@@ -27,6 +28,10 @@ public class QuestionEntity {
     private String optionsJson;
     private String standardAnswer;
     private String explanation;
+    private UUID importBatchId;
+    private Integer sourcePage;
+    private String sourceQuestionNo;
+    private String sourceLabel;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -109,6 +114,15 @@ public class QuestionEntity {
     public void setExplanation(String explanation) {
         this.explanation = explanation;
     }
+
+    public UUID getImportBatchId() { return importBatchId; }
+    public void setImportBatchId(UUID importBatchId) { this.importBatchId = importBatchId; }
+    public Integer getSourcePage() { return sourcePage; }
+    public void setSourcePage(Integer sourcePage) { this.sourcePage = sourcePage; }
+    public String getSourceQuestionNo() { return sourceQuestionNo; }
+    public void setSourceQuestionNo(String sourceQuestionNo) { this.sourceQuestionNo = sourceQuestionNo; }
+    public String getSourceLabel() { return sourceLabel; }
+    public void setSourceLabel(String sourceLabel) { this.sourceLabel = sourceLabel; }
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;

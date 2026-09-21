@@ -13,6 +13,7 @@ public class UserAccountEntity {
     private Long id;
     private String displayName;
     private String avatarUrl;
+    private String role;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -22,6 +23,8 @@ public class UserAccountEntity {
     public void setDisplayName(String displayName) { this.displayName = displayName; }
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }

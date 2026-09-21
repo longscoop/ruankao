@@ -33,6 +33,7 @@ public class SecurityConfig {
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/error", "/api/v1/auth/wechat/login").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(
                         bearerTokenAuthenticationFilter,

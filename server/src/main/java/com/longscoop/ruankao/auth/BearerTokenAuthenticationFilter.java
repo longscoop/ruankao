@@ -1,5 +1,6 @@
 package com.longscoop.ruankao.auth;
 
+import com.longscoop.ruankao.auth.persistence.UserAccountMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +18,13 @@ import java.util.List;
 public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthSessionService sessionService;
+    private final UserAccountMapper userAccountMapper;
 
-    public BearerTokenAuthenticationFilter(AuthSessionService sessionService) {
+    public BearerTokenAuthenticationFilter(
+            AuthSessionService sessionService,
+            UserAccountMapper userAccountMapper) {
         this.sessionService = sessionService;
+        this.userAccountMapper = userAccountMapper;
     }
 
     @Override
@@ -32,10 +37,14 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
             if (header != null && header.regionMatches(true, 0, "Bearer ", 0, 7)) {
                 String token = header.substring(7).trim();
                 sessionService.resolve(token).ifPresent(userId -> {
+                    var user = userAccountMapper.selectById(userId);
+                    String role = user == null || user.getRole() == null || user.getRole().isBlank()
+                            ? "USER"
+                            : user.getRole().trim().toUpperCase();
                     var authentication = new UsernamePasswordAuthenticationToken(
                             new RuankaoPrincipal(userId),
                             "n/a",
-                            List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 });
             }
