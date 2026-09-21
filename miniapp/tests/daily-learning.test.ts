@@ -9,7 +9,7 @@ const plan: DailyPlanDto = {
   targetMinutes: 30,
   tasks: [
     { taskId: 1, taskType: 'WRONG_REVIEW', knowledgeId: 3, estimatedMinutes: 6, priorityScore: 80 },
-    { taskId: 2, taskType: 'WEAK_KNOWLEDGE', knowledgeId: 7, estimatedMinutes: 11, priorityScore: 70 },
+    { taskId: 2, taskType: 'WEAK_POINT', knowledgeId: 7, estimatedMinutes: 11, priorityScore: 70 },
     { taskId: 3, taskType: 'REAL_EXAM', knowledgeId: null, estimatedMinutes: 6, priorityScore: null },
   ],
 }
