@@ -81,6 +81,30 @@ export interface CourseChapterDto {
   title: string
   description?: string | null
   videos: VideoSummaryDto[]
+  lessons: LessonSummaryDto[]
+}
+
+export interface LessonSummaryDto {
+  id: number
+  chapterId: number
+  title: string
+  summary?: string | null
+  sourcePageStart?: number | null
+  sourcePageEnd?: number | null
+}
+
+export interface LessonBlockDto {
+  id: number
+  blockType: 'TEXT' | 'IMAGE' | 'TABLE' | 'DIAGRAM' | 'TIP' | 'IMPORTANT' | 'QUESTION' | 'CASE'
+  textContent?: string | null
+  imageUrl?: string | null
+  sourcePage?: number | null
+  sortOrder: number
+}
+
+export interface LessonDetailDto extends LessonSummaryDto {
+  blocks: LessonBlockDto[]
+  knowledgeIds: number[]
 }
 
 export interface CourseDetailDto extends CourseSummaryDto {

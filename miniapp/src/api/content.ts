@@ -1,5 +1,5 @@
 import { apiRequest } from '@/api/client'
-import type { CourseDetailDto, CourseSummaryDto, KnowledgeDetailDto, VideoDetailDto } from '@/types/api'
+import type { CourseDetailDto, CourseSummaryDto, KnowledgeDetailDto, LessonDetailDto, VideoDetailDto } from '@/types/api'
 
 export function listCourses(examId?: number): Promise<CourseSummaryDto[]> {
   const query = examId ? `?examId=${examId}` : ''
@@ -8,6 +8,10 @@ export function listCourses(examId?: number): Promise<CourseSummaryDto[]> {
 
 export function getCourse(courseId: number): Promise<CourseDetailDto> {
   return apiRequest<CourseDetailDto>({ path: `/api/v1/courses/${courseId}` })
+}
+
+export function getLesson(lessonId: number): Promise<LessonDetailDto> {
+  return apiRequest<LessonDetailDto>({ path: `/api/v1/lessons/${lessonId}` })
 }
 
 export function getVideo(videoId: number): Promise<VideoDetailDto> {

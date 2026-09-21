@@ -56,6 +56,12 @@
       }
     },
     {
+      "path": "pages/lesson/detail",
+      "style": {
+        "navigationBarTitleText": "知识串讲"
+      }
+    },
+    {
       "path": "pages/video/detail",
       "style": {
         "navigationBarTitleText": "视频学习"

@@ -1,6 +1,13 @@
 package com.longscoop.ruankao.course;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.longscoop.ruankao.content.model.LessonStatus;
+import com.longscoop.ruankao.content.persistence.LessonBlockEntity;
+import com.longscoop.ruankao.content.persistence.LessonBlockMapper;
+import com.longscoop.ruankao.content.persistence.LessonEntity;
+import com.longscoop.ruankao.content.persistence.LessonKnowledgeEntity;
+import com.longscoop.ruankao.content.persistence.LessonKnowledgeMapper;
+import com.longscoop.ruankao.content.persistence.LessonMapper;
 import com.longscoop.ruankao.course.model.CourseStatus;
 import com.longscoop.ruankao.course.model.VideoStatus;
 import com.longscoop.ruankao.course.persistence.CourseChapterEntity;
@@ -39,6 +46,9 @@ public class LearnerContentService {
     private final CourseMapper courseMapper;
     private final CourseChapterMapper chapterMapper;
     private final VideoMapper videoMapper;
+    private final LessonMapper lessonMapper;
+    private final LessonBlockMapper lessonBlockMapper;
+    private final LessonKnowledgeMapper lessonKnowledgeMapper;
     private final VideoKnowledgeRelationMapper relationMapper;
     private final KnowledgePointMapper knowledgeMapper;
     private final UserKnowledgeMasteryMapper masteryMapper;
@@ -51,6 +61,9 @@ public class LearnerContentService {
             CourseMapper courseMapper,
             CourseChapterMapper chapterMapper,
             VideoMapper videoMapper,
+            LessonMapper lessonMapper,
+            LessonBlockMapper lessonBlockMapper,
+            LessonKnowledgeMapper lessonKnowledgeMapper,
             VideoKnowledgeRelationMapper relationMapper,
             KnowledgePointMapper knowledgeMapper,
             UserKnowledgeMasteryMapper masteryMapper,
@@ -61,6 +74,9 @@ public class LearnerContentService {
         this.courseMapper = courseMapper;
         this.chapterMapper = chapterMapper;
         this.videoMapper = videoMapper;
+        this.lessonMapper = lessonMapper;
+        this.lessonBlockMapper = lessonBlockMapper;
+        this.lessonKnowledgeMapper = lessonKnowledgeMapper;
         this.relationMapper = relationMapper;
         this.knowledgeMapper = knowledgeMapper;
         this.masteryMapper = masteryMapper;
@@ -100,7 +116,8 @@ public class LearnerContentService {
                         chapter.getCourseId(),
                         chapter.getTitle(),
                         chapter.getDescription(),
-                        publishedVideos(chapter.getId())))
+                        publishedVideos(chapter.getId()),
+                        publishedLessons(chapter.getId())))
                 .toList();
         return Optional.of(new CourseDetail(
                 course.getId(),
@@ -155,6 +172,51 @@ public class LearnerContentService {
         }
         videoProgressService.update(userId, videoId, progressSeconds);
         return true;
+    }
+
+
+    @Transactional(readOnly = true)
+    public Optional<LessonDetail> getLesson(long userId, long lessonId) {
+        LessonEntity lesson = lessonMapper.selectById(lessonId);
+        if (!visibleLesson(userId, lesson)) {
+            return Optional.empty();
+        }
+
+        List<LessonBlockView> blocks = lessonBlockMapper.selectList(
+                        Wrappers.<LessonBlockEntity>lambdaQuery()
+                                .eq(LessonBlockEntity::getLessonId, lessonId)
+                                .orderByAsc(LessonBlockEntity::getSortOrder)
+                                .orderByAsc(LessonBlockEntity::getId))
+                .stream()
+                .map(block -> new LessonBlockView(
+                        block.getId(),
+                        block.getBlockType().name(),
+                        block.getTextContent(),
+                        block.getImageObjectKey() == null
+                                ? null
+                                : storageProvider.generateAccessUrl(
+                                        block.getImageObjectKey(), VIDEO_URL_TTL).toString(),
+                        block.getSourcePage(),
+                        block.getSortOrder()))
+                .toList();
+
+        List<Long> knowledgeIds = lessonKnowledgeMapper.selectList(
+                        Wrappers.<LessonKnowledgeEntity>lambdaQuery()
+                                .eq(LessonKnowledgeEntity::getLessonId, lessonId)
+                                .orderByAsc(LessonKnowledgeEntity::getKnowledgeId))
+                .stream()
+                .map(LessonKnowledgeEntity::getKnowledgeId)
+                .toList();
+
+        return Optional.of(new LessonDetail(
+                lesson.getId(),
+                lesson.getChapterId(),
+                lesson.getTitle(),
+                lesson.getSummary(),
+                lesson.getSourcePageStart(),
+                lesson.getSourcePageEnd(),
+                blocks,
+                knowledgeIds));
     }
 
     @Transactional(readOnly = true)
@@ -249,6 +311,34 @@ public class LearnerContentService {
                 .orElse(false);
     }
 
+
+    private boolean visibleLesson(long userId, LessonEntity lesson) {
+        if (lesson == null || lesson.getStatus() != LessonStatus.PUBLISHED) {
+            return false;
+        }
+        CourseChapterEntity chapter = chapterMapper.selectById(lesson.getChapterId());
+        CourseEntity course = chapter == null ? null : courseMapper.selectById(chapter.getCourseId());
+        return visibleCourse(userId, course);
+    }
+
+    private List<LessonSummary> publishedLessons(long chapterId) {
+        return lessonMapper.selectList(
+                        Wrappers.<LessonEntity>lambdaQuery()
+                                .eq(LessonEntity::getChapterId, chapterId)
+                                .eq(LessonEntity::getStatus, LessonStatus.PUBLISHED)
+                                .orderByAsc(LessonEntity::getSortOrder)
+                                .orderByAsc(LessonEntity::getId))
+                .stream()
+                .map(lesson -> new LessonSummary(
+                        lesson.getId(),
+                        lesson.getChapterId(),
+                        lesson.getTitle(),
+                        lesson.getSummary(),
+                        lesson.getSourcePageStart(),
+                        lesson.getSourcePageEnd()))
+                .toList();
+    }
+
     private List<VideoSummary> publishedVideos(long chapterId) {
         return videoMapper.selectList(
                         Wrappers.<VideoEntity>lambdaQuery()
@@ -295,7 +385,37 @@ public class LearnerContentService {
             long courseId,
             String title,
             String description,
-            List<VideoSummary> videos) {
+            List<VideoSummary> videos,
+            List<LessonSummary> lessons) {
+    }
+
+    public record LessonSummary(
+            long id,
+            long chapterId,
+            String title,
+            String summary,
+            Integer sourcePageStart,
+            Integer sourcePageEnd) {
+    }
+
+    public record LessonBlockView(
+            long id,
+            String blockType,
+            String textContent,
+            String imageUrl,
+            Integer sourcePage,
+            int sortOrder) {
+    }
+
+    public record LessonDetail(
+            long id,
+            long chapterId,
+            String title,
+            String summary,
+            Integer sourcePageStart,
+            Integer sourcePageEnd,
+            List<LessonBlockView> blocks,
+            List<Long> knowledgeIds) {
     }
 
     public record VideoSummary(
