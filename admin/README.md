@@ -1,6 +1,6 @@
 # Ruankao Admin
 
-Vue 3 content operations UI for PDF question-bank / lecture imports.
+Vue 3 + TypeScript + Element Plus content operations console for PDF question-bank / lecture imports.
 
 ## Run
 
@@ -12,20 +12,36 @@ npm run dev
 
 Set `VITE_API_BASE_URL` to the server base URL.
 
-The current admin UI accepts an ADMIN user's Bearer session token. Promote an existing trusted `app_user` to `role='ADMIN'` in the deployment database before using the import endpoints. The server enforces `ROLE_ADMIN` for all `/api/v1/admin/**` routes.
+## Administrator authentication
+
+The admin console now uses a real username/password login flow instead of asking an operator to paste a Bearer Token manually.
+
+Configure the server with environment variables:
+
+```bash
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD='replace-with-a-strong-password'
+AUTH_SESSION_DAYS=30
+```
+
+Do not commit production credentials.
+
+On the first successful administrator login, the server creates or binds an `ADMIN_PASSWORD` identity, ensures the linked `app_user.role` is `ADMIN`, and issues the same random database-backed Bearer session used by the rest of the authentication infrastructure. Admin passwords are read from server configuration and are not persisted to the database.
+
+All `/api/v1/admin/**` routes are still enforced server-side with `ROLE_ADMIN`. The UI validates the saved session through `/api/v1/admin/auth/me` on startup and clears the local session automatically after a 401 response.
 
 ## PDF workflow
 
-1. Upload PDF + exam ID.
-2. Review source-page image/text, parsed items and issues.
-3. Edit/approve/reject items and resolve parser issues.
-4. Confirm import to materialize lecture lessons in REVIEW.
-5. Publish knowledge with explicit importance/frequency/minutes.
-6. Publish questions with explicit source/difficulty/knowledge mapping.
-7. Publish lessons with explicit knowledge mapping.
+1. Sign in as an administrator.
+2. Upload PDF + exam ID.
+3. Review source-page image/text, parsed items and issues.
+4. Edit/approve/reject items and resolve parser issues.
+5. Confirm import to materialize lecture lessons in REVIEW.
+6. Publish knowledge with explicit importance/frequency/minutes.
+7. Publish questions with explicit source/difficulty/knowledge mapping.
+8. Publish lessons with explicit knowledge mapping.
 
 Nothing is automatically published by PDF parsing.
-
 
 ## Server configuration for PDF imports
 
