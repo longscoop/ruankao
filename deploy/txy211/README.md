@@ -9,7 +9,8 @@ From the repository root, copy source without local output or credentials:
 
 ```bash
 rsync -az --delete \
-  --exclude '.git' --exclude 'target' --exclude 'node_modules' --exclude 'dist' --exclude '.env' \
+  --exclude '.git' --exclude '.superpowers' --exclude 'target' --exclude 'node_modules' --exclude 'dist' \
+  --include '*/.env.example' --exclude '.env' --exclude '.env.*' \
   ./ txy211:/opt/ruankao/source/
 ```
 
@@ -19,7 +20,7 @@ and install the static files:
 ```bash
 export PATH="/opt/node22/bin:$PATH"
 cd /opt/ruankao/source/admin
-npm install
+npm install --no-package-lock
 VITE_API_BASE_URL=/api npm run check
 sudo install -d -m 0755 /var/www/ruankao-admin
 sudo rsync -a --delete dist/ /var/www/ruankao-admin/
@@ -51,8 +52,14 @@ Install and activate host Nginx only after the Compose server has started:
 ```bash
 sudo install -m 0644 /opt/ruankao/source/deploy/txy211/nginx.conf /etc/nginx/sites-available/ruankao
 sudo ln -sfn /etc/nginx/sites-available/ruankao /etc/nginx/sites-enabled/ruankao
-sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
+sudo unlink /etc/nginx/sites-enabled/default
+if ! sudo nginx -t; then
+  sudo unlink /etc/nginx/sites-enabled/ruankao
+  sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+  sudo nginx -t
+  exit 1
+fi
 sudo systemctl reload nginx
 ```
 

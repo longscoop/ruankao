@@ -13,15 +13,15 @@ There is no domain name or TLS certificate in scope for this deployment.
 - The existing `ruankao-postgres` container may be stopped and removed after
   its state has been inspected; the deployed database is a new, isolated
   PostgreSQL instance.
-- PostgreSQL data is persisted in a named Docker volume. Imported PDF files
-  and rendered page images are persisted in a separate named Docker volume.
+- PostgreSQL data is persisted at `/opt/ruankao/data/postgres`. Imported PDF
+  files and rendered page images are persisted at `/opt/ruankao/data/storage`.
 
 ```text
 browser
   -> host Nginx :80
        /            -> static admin build
        /api/         -> Docker Compose server :8080 (loopback only)
-       /storage/     -> read-only storage Docker volume
+       /storage/     -> read-only storage host bind mount
 
 Docker Compose
   server (Java 17) -> postgres:16 (private Docker network)
@@ -34,12 +34,12 @@ Docker Compose
 The Compose project has two services:
 
 - `postgres`: PostgreSQL 16 with database and application credentials supplied
-  through a server-only environment file. It exposes no host port and owns a
-  named `postgres-data` volume.
+  through a server-only environment file. It exposes no host port and mounts
+  `/opt/ruankao/data/postgres` for durable database data.
 - `server`: built with Maven and run on a Java 17 JRE. It connects to
   `postgres` through the Compose network, runs Flyway migrations during
-  startup, binds `127.0.0.1:8080`, and mounts `ruankao-storage` at the
-  configured local storage root.
+  startup, binds `127.0.0.1:8080`, and mounts `/opt/ruankao/data/storage` at
+  the configured local storage root.
 
 The application image is built from the repository source on the target host.
 No application, PostgreSQL, AI, WeChat, or storage secret is committed to Git.
@@ -49,7 +49,7 @@ No application, PostgreSQL, AI, WeChat, or storage secret is committed to Git.
 Nginx serves the admin production build from `/var/www/ruankao-admin`.
 The production admin build has `VITE_API_BASE_URL=/api`, so API calls are
 same-origin. Nginx proxies `/api/` to the loopback-bound server and serves
-`/storage/` read-only from the Docker volume mount. The default Nginx site is
+`/storage/` read-only from the host bind mount. The default Nginx site is
 disabled only after the new configuration passes `nginx -t`.
 
 ## Data and security
@@ -85,7 +85,7 @@ container will not be deleted until the new stack is verified.
 - `http://127.0.0.1:8080` is reachable only on the host.
 - `http://43.143.201.211/api/...` reaches the server through Nginx.
 - `http://43.143.201.211/` returns the admin application.
-- PostgreSQL and upload data use persistent Docker volumes.
+- PostgreSQL and upload data use persistent host bind mounts.
 
 ## Completion Evidence
 

@@ -5,11 +5,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
-      - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_DIR:?POSTGRES_DATA_DIR must be set}:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -25,13 +25,13 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${SERVER_PORT}:8080"
+      - "127.0.0.1:${SERVER_PORT:?SERVER_PORT must be set}:8080"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      DB_USERNAME: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set}
+      DB_USERNAME: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       STORAGE_LOCAL_ROOT: /data/ruankao-storage
-      STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL}
-      AI_DAILY_REQUEST_LIMIT: ${AI_DAILY_REQUEST_LIMIT}
+      STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL:?STORAGE_PUBLIC_BASE_URL must be set}
+      AI_DAILY_REQUEST_LIMIT: ${AI_DAILY_REQUEST_LIMIT:?AI_DAILY_REQUEST_LIMIT must be set}
     volumes:
-      - ${STORAGE_DATA_DIR}:/data/ruankao-storage
+      - ${STORAGE_DATA_DIR:?STORAGE_DATA_DIR must be set}:/data/ruankao-storage
