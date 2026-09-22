@@ -86,3 +86,19 @@ container will not be deleted until the new stack is verified.
 - `http://43.143.201.211/api/...` reaches the server through Nginx.
 - `http://43.143.201.211/` returns the admin application.
 - PostgreSQL and upload data use persistent Docker volumes.
+
+## Completion Evidence
+
+- Target: `txy211` (`43.143.201.211`) with host Nginx serving the admin
+  application on port 80.
+- Docker Compose services: PostgreSQL 16 was healthy and the Java 17 server
+  was running with only `127.0.0.1:8080` published.
+- Flyway: 9 migrations were applied successfully to the new `ruankao`
+  PostgreSQL database.
+- Route checks: local and public admin requests returned `200`; unauthenticated
+  local and public `/api/v1/exams` requests returned `401`; a missing storage
+  object returned `404`.
+- Persistence: PostgreSQL and storage use `/opt/ruankao/data/postgres` and
+  `/opt/ruankao/data/storage` host bind mounts.
+- Previous state: the former `ruankao-postgres` container remains present but
+  stopped, so it can be recovered without recreating it.
