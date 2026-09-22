@@ -8,6 +8,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 public class SecurityConfig {
 
@@ -28,11 +31,15 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, error) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                                writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "登录状态无效或已过期"))
                         .accessDeniedHandler((request, response, error) ->
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN)))
+                                writeError(response, HttpServletResponse.SC_FORBIDDEN, "没有权限访问该资源")))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/error", "/api/v1/auth/wechat/login").permitAll()
+                        .requestMatchers(
+                                "/error",
+                                "/api/v1/auth/wechat/login",
+                                "/api/v1/auth/admin/login")
+                        .permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(
@@ -40,5 +47,15 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static void writeError(
+            HttpServletResponse response,
+            int status,
+            String message) throws IOException {
+        response.setStatus(status);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
     }
 }
