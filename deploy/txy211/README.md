@@ -43,6 +43,8 @@ umask 077
   printf '%s\n' 'STORAGE_DATA_DIR=/opt/ruankao/data/storage'
   printf '%s\n' 'STORAGE_PUBLIC_BASE_URL=http://43.143.201.211/storage'
   printf '%s\n' 'SERVER_PORT=8080' 'AI_DAILY_REQUEST_LIMIT=20'
+  printf '%s\n' 'ADMIN_USERNAME=admin'
+  printf 'ADMIN_PASSWORD=%s\n' "$(openssl rand -hex 24)"
 } > .env
 docker compose --env-file .env up --build -d
 ```
