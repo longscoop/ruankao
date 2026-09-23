@@ -24,6 +24,7 @@ npm install --no-package-lock
 VITE_API_BASE_URL=/api npm run check
 sudo install -d -m 0755 /var/www/ruankao-admin
 sudo rsync -a --delete dist/ /var/www/ruankao-admin/
+sudo chmod -R a+rX /var/www/ruankao-admin
 ```
 
 Create persistent directories and a server-only environment file. The command
@@ -87,6 +88,7 @@ Repeat the source copy and admin build. Keep the existing `.env`, then run:
 cd /opt/ruankao/source/deploy/txy211
 docker compose --env-file .env up --build -d
 sudo rsync -a --delete /opt/ruankao/source/admin/dist/ /var/www/ruankao-admin/
+sudo chmod -R a+rX /var/www/ruankao-admin
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
