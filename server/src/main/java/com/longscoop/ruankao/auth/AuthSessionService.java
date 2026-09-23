@@ -67,6 +67,14 @@ public class AuthSessionService {
         return Optional.of(userId);
     }
 
+    @Transactional
+    public void revoke(String token) {
+        if (token == null || token.isBlank()) {
+            return;
+        }
+        sessionMapper.deleteByTokenHash(hash(token.trim()));
+    }
+
     private String hash(String token) {
         try {
             return HexFormat.of().formatHex(

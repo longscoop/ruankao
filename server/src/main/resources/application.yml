@@ -12,3 +12,8 @@ mybatis-plus:
   type-handlers-package: com.longscoop.ruankao.common.persistence
   configuration:
     map-underscore-to-camel-case: true
+
+ruankao:
+  admin:
+    username: ${ADMIN_USERNAME:}
+    password: ${ADMIN_PASSWORD:}

@@ -1,6 +1,7 @@
 package com.longscoop.ruankao.auth.persistence;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -28,4 +29,7 @@ public interface AuthSessionMapper extends BaseMapper<AuthSessionEntity> {
               and expires_at > #{now}
             """)
     int touch(@Param("tokenHash") String tokenHash, @Param("now") OffsetDateTime now);
+
+    @Delete("delete from auth_session where token_hash = #{tokenHash}")
+    int deleteByTokenHash(@Param("tokenHash") String tokenHash);
 }

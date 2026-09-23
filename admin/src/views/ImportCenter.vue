@@ -22,6 +22,7 @@ const publishDialog = ref(false)
 const aiDialog = ref(false)
 const aiSuggestion = ref('')
 const batchTitle = ref('')
+const batchKeyword = ref('')
 const editForm = reactive({ title: '', contentJson: '' })
 const publishForm = reactive({
   knowledgeIds: '',
@@ -36,6 +37,20 @@ const publishForm = reactive({
 })
 
 const openIssues = computed(() => detail.value?.issues.filter(x => x.status === 'OPEN') || [])
+const filteredBatches = computed(() => {
+  const keyword = batchKeyword.value.trim().toLowerCase()
+  if (!keyword) return batches.value
+  return batches.value.filter(batch =>
+    (batch.title || batch.filename).toLowerCase().includes(keyword)
+    || batch.status.toLowerCase().includes(keyword)
+    || batch.detectedType.toLowerCase().includes(keyword),
+  )
+})
+const completedItems = computed(() =>
+  detail.value?.items.filter(item =>
+    ['APPROVED', 'MATERIALIZED', 'PUBLISHED'].includes(item.status),
+  ).length || 0,
+)
 
 async function refreshList() {
   batches.value = await listImports(examId.value)
@@ -80,7 +95,7 @@ async function doUpload() {
   loading.value = true
   try {
     const result = await uploadPdf(examId.value, file.value)
-    ElMessage.success(`解析完成：${result.itemCount} 个内容项，${result.issueCount} 个问题`)
+    ElMessage.success('解析完成：' + result.itemCount + ' 个内容项，' + result.issueCount + ' 个问题')
     await refreshList()
     const batch = batches.value.find(x => x.batchId === result.batchId)
     if (batch) await selectBatch(batch)
@@ -101,6 +116,7 @@ async function doApproveAll() {
   if (!detail.value) return
   await approveAll(detail.value.batchId)
   await refreshDetail()
+  ElMessage.success('可批准内容已批量处理')
 }
 
 async function setItemStatus(item: ImportItem, approve: boolean) {
@@ -122,11 +138,12 @@ async function saveEdit() {
   await updateItem(detail.value.batchId, selectedItem.value.id, editForm.title, editForm.contentJson)
   editDialog.value = false
   await refreshDetail()
+  ElMessage.success('内容项已保存并重新进入审核')
 }
 
 async function doConfirm() {
   if (!detail.value) return
-  const key = `pdf-${detail.value.batchId}`
+  const key = 'pdf-' + detail.value.batchId
   await confirmImport(detail.value.batchId, key)
   ElMessage.success('已确认导入；讲义已进入 REVIEW，仍需显式发布')
   await refreshDetail()
@@ -203,41 +220,129 @@ onMounted(refreshList)
 <template>
   <main class="workspace">
     <aside class="side">
-      <el-card>
-        <template #header>上传 PDF</template>
-        <el-form label-position="top">
+      <el-card class="panel-card upload-card" shadow="never">
+        <template #header>
+          <div class="card-heading">
+            <div>
+              <span class="section-kicker">QUICK IMPORT</span>
+              <strong>上传 PDF</strong>
+            </div>
+            <span class="step-badge">01</span>
+          </div>
+        </template>
+
+        <el-alert
+          class="compact-alert"
+          type="info"
+          :closable="false"
+          title="解析只生成待审核内容，不会自动发布。"
+        />
+
+        <el-form class="upload-form" label-position="top">
           <el-form-item label="考试 ID">
             <el-input-number v-model="examId" :min="1" controls-position="right" />
           </el-form-item>
           <el-form-item label="PDF 文件">
-            <input type="file" accept="application/pdf,.pdf" @change="onFileChange" />
+            <label class="file-picker">
+              <input type="file" accept="application/pdf,.pdf" @change="onFileChange" />
+              <span class="file-picker-main">{{ file?.name || '选择 PDF 文件' }}</span>
+              <span class="file-picker-sub">{{ file ? '点击可重新选择' : '支持题库、讲义与知识串讲 PDF' }}</span>
+            </label>
           </el-form-item>
-          <el-button type="primary" :loading="loading" @click="doUpload">解析并 Dry Run</el-button>
+          <el-button class="full-button" type="primary" :loading="loading" @click="doUpload">
+            解析并 Dry Run
+          </el-button>
         </el-form>
       </el-card>
 
-      <el-card class="batch-card">
+      <el-card class="panel-card batch-card" shadow="never">
         <template #header>
-          <div class="row-between"><span>导入批次</span><el-button text @click="refreshList">刷新</el-button></div>
+          <div class="card-heading">
+            <div>
+              <span class="section-kicker">BATCHES</span>
+              <strong>导入批次</strong>
+            </div>
+            <el-button text @click="refreshList">刷新</el-button>
+          </div>
         </template>
-        <div v-for="batch in batches" :key="batch.batchId" class="batch" @click="selectBatch(batch)">
-          <strong>{{ batch.title || batch.filename }}</strong>
-          <span>{{ batch.detectedType }} · {{ batch.status }}</span>
-          <span>{{ batch.pageCount }} 页</span>
+
+        <el-input
+          v-model="batchKeyword"
+          class="batch-search"
+          clearable
+          placeholder="搜索标题、类型或状态"
+        />
+
+        <div class="batch-list">
+          <button
+            v-for="batch in filteredBatches"
+            :key="batch.batchId"
+            type="button"
+            class="batch"
+            :class="{ active: detail?.batchId === batch.batchId }"
+            @click="selectBatch(batch)"
+          >
+            <div class="batch-title-row">
+              <strong>{{ batch.title || batch.filename }}</strong>
+              <el-tag size="small" effect="plain">{{ batch.status }}</el-tag>
+            </div>
+            <span>{{ batch.detectedType }} · {{ batch.pageCount }} 页</span>
+          </button>
+
+          <el-empty
+            v-if="!filteredBatches.length"
+            :image-size="72"
+            description="暂无匹配批次"
+          />
         </div>
       </el-card>
     </aside>
 
     <section class="content">
-      <el-empty v-if="!detail" description="选择一个导入批次开始审核" />
+      <div v-if="!detail" class="empty-panel">
+        <el-empty
+          description="选择左侧导入批次开始审核"
+          :image-size="140"
+        >
+          <template #description>
+            <p>选择一个导入批次开始审核</p>
+            <span>你可以核对原 PDF、修正结构、处理问题并逐项发布。</span>
+          </template>
+        </el-empty>
+      </div>
+
       <template v-else>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span>PDF 页数</span>
+            <strong>{{ detail.pageCount }}</strong>
+            <small>源文档规模</small>
+          </div>
+          <div class="metric-card">
+            <span>内容项</span>
+            <strong>{{ detail.items.length }}</strong>
+            <small>{{ completedItems }} 项已通过或完成</small>
+          </div>
+          <div class="metric-card" :class="{ warning: openIssues.length }">
+            <span>待处理问题</span>
+            <strong>{{ openIssues.length }}</strong>
+            <small>需人工确认</small>
+          </div>
+          <div class="metric-card">
+            <span>批次状态</span>
+            <strong class="metric-status">{{ detail.status }}</strong>
+            <small>{{ detail.detectedType }}</small>
+          </div>
+        </div>
+
         <div class="detail-head">
-          <div>
+          <div class="detail-title-block">
+            <span class="section-kicker">CURRENT BATCH</span>
             <div class="title-edit">
-              <el-input v-model="batchTitle" style="width:420px" />
+              <el-input v-model="batchTitle" />
               <el-button @click="saveBatchTitle">保存标题</el-button>
             </div>
-            <p>{{ detail.detectedType }} · {{ detail.status }} · {{ detail.pageCount }} 页</p>
+            <p>#{{ detail.batchId }} · {{ detail.filename }}</p>
           </div>
           <div class="actions">
             <el-button @click="doApproveAll">批准无误项</el-button>
@@ -246,33 +351,64 @@ onMounted(refreshList)
         </div>
 
         <el-row :gutter="16">
-          <el-col :span="10">
-            <el-card class="preview-card">
+          <el-col :xs="24" :xl="10">
+            <el-card class="panel-card preview-card" shadow="never">
               <template #header>
                 <div class="row-between">
-                  <span>原 PDF 页</span>
-                  <el-select v-model="pageNumber" style="width:120px" @change="refreshPreview">
-                    <el-option v-for="page in detail.pages" :key="page.pageNumber" :label="`第 ${page.pageNumber} 页`" :value="page.pageNumber" />
+                  <div class="card-title">
+                    <strong>原 PDF 页</strong>
+                    <span>对照源材料审核解析结果</span>
+                  </div>
+                  <el-select v-model="pageNumber" style="width: 126px" @change="refreshPreview">
+                    <el-option
+                      v-for="page in detail.pages"
+                      :key="page.pageNumber"
+                      :label="'第 ' + page.pageNumber + ' 页'"
+                      :value="page.pageNumber"
+                    />
                   </el-select>
                 </div>
               </template>
-              <img v-if="previewUrl" class="preview" :src="previewUrl" />
-              <pre class="source-text">{{ detail.pages.find(x=>x.pageNumber===pageNumber)?.textContent }}</pre>
+              <div class="preview-canvas">
+                <img v-if="previewUrl" class="preview" :src="previewUrl" />
+                <el-empty v-else :image-size="80" description="暂无页面预览图" />
+              </div>
+              <details class="source-details">
+                <summary>查看识别文本</summary>
+                <pre class="source-text">{{ detail.pages.find(x => x.pageNumber === pageNumber)?.textContent }}</pre>
+              </details>
             </el-card>
           </el-col>
 
-          <el-col :span="14">
-            <el-card>
-              <template #header>解析问题（{{ openIssues.length }} 未解决）</template>
-              <el-table :data="detail.issues" size="small">
-                <el-table-column prop="severity" label="级别" width="90" />
-                <el-table-column prop="code" label="代码" width="180" />
-                <el-table-column prop="message" label="说明" />
-                <el-table-column prop="sourcePage" label="页" width="60" />
-                <el-table-column label="操作" width="90">
+          <el-col :xs="24" :xl="14">
+            <el-card class="panel-card issue-card" shadow="never">
+              <template #header>
+                <div class="row-between">
+                  <div class="card-title">
+                    <strong>解析问题</strong>
+                    <span>优先清理未解决问题，再确认批次</span>
+                  </div>
+                  <el-tag :type="openIssues.length ? 'warning' : 'success'" effect="light">
+                    {{ openIssues.length }} 未解决
+                  </el-tag>
+                </div>
+              </template>
+              <el-table :data="detail.issues" size="small" stripe>
+                <el-table-column prop="severity" label="级别" width="82" />
+                <el-table-column prop="code" label="代码" min-width="150" />
+                <el-table-column prop="message" label="说明" min-width="220" />
+                <el-table-column prop="sourcePage" label="页" width="56" />
+                <el-table-column label="操作" width="88" fixed="right">
                   <template #default="{ row }">
-                    <el-button v-if="row.status==='OPEN'" link type="primary" @click="resolve(row.id)">解决</el-button>
-                    <span v-else>已解决</span>
+                    <el-button
+                      v-if="row.status === 'OPEN'"
+                      link
+                      type="primary"
+                      @click="resolve(row.id)"
+                    >
+                      解决
+                    </el-button>
+                    <el-tag v-else size="small" type="success" effect="plain">已解决</el-tag>
                   </template>
                 </el-table-column>
               </el-table>
@@ -280,23 +416,43 @@ onMounted(refreshList)
           </el-col>
         </el-row>
 
-        <el-card class="items-card">
-          <template #header>内容项</template>
-          <el-table :data="detail.items">
-            <el-table-column prop="itemType" label="类型" width="110" />
-            <el-table-column prop="title" label="标题" min-width="220" />
-            <el-table-column label="来源页" width="100">
-              <template #default="{ row }">{{ row.sourcePageStart }}<span v-if="row.sourcePageEnd!==row.sourcePageStart">-{{ row.sourcePageEnd }}</span></template>
+        <el-card class="panel-card items-card" shadow="never">
+          <template #header>
+            <div class="row-between">
+              <div class="card-title">
+                <strong>内容项</strong>
+                <span>审核结构化结果并显式发布到学习内容</span>
+              </div>
+              <span class="table-count">{{ detail.items.length }} 项</span>
+            </div>
+          </template>
+          <el-table :data="detail.items" stripe>
+            <el-table-column prop="itemType" label="类型" width="110">
+              <template #default="{ row }"><el-tag size="small" effect="plain">{{ row.itemType }}</el-tag></template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="120" />
-            <el-table-column prop="targetId" label="目标 ID" width="90" />
-            <el-table-column label="审核/发布" width="310">
+            <el-table-column prop="title" label="标题" min-width="240" show-overflow-tooltip />
+            <el-table-column label="来源页" width="96">
               <template #default="{ row }">
-                <el-button link @click="openEdit(row)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">编辑</el-button>
-                <el-button link type="warning" @click="showAiSuggestion(row)">AI建议</el-button>
-                <el-button link type="success" @click="setItemStatus(row,true)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">批准</el-button>
-                <el-button link type="danger" @click="setItemStatus(row,false)" :disabled="['MATERIALIZED','PUBLISHED'].includes(row.status)">驳回</el-button>
-                <el-button link type="primary" @click="openPublish(row)" :disabled="row.itemType==='LESSON' ? row.status!=='MATERIALIZED' : row.status!=='APPROVED'">发布</el-button>
+                {{ row.sourcePageStart }}
+                <span v-if="row.sourcePageEnd !== row.sourcePageStart">-{{ row.sourcePageEnd }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="126" />
+            <el-table-column prop="targetId" label="目标 ID" width="88" />
+            <el-table-column label="审核 / 发布" width="320" fixed="right">
+              <template #default="{ row }">
+                <el-button link @click="openEdit(row)" :disabled="['MATERIALIZED', 'PUBLISHED'].includes(row.status)">编辑</el-button>
+                <el-button link type="warning" @click="showAiSuggestion(row)">AI 建议</el-button>
+                <el-button link type="success" @click="setItemStatus(row, true)" :disabled="['MATERIALIZED', 'PUBLISHED'].includes(row.status)">批准</el-button>
+                <el-button link type="danger" @click="setItemStatus(row, false)" :disabled="['MATERIALIZED', 'PUBLISHED'].includes(row.status)">驳回</el-button>
+                <el-button
+                  link
+                  type="primary"
+                  @click="openPublish(row)"
+                  :disabled="row.itemType === 'LESSON' ? row.status !== 'MATERIALIZED' : row.status !== 'APPROVED'"
+                >
+                  发布
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -309,7 +465,10 @@ onMounted(refreshList)
         <el-form-item label="标题"><el-input v-model="editForm.title" /></el-form-item>
         <el-form-item label="结构化 JSON"><el-input v-model="editForm.contentJson" type="textarea" :rows="18" /></el-form-item>
       </el-form>
-      <template #footer><el-button @click="editDialog=false">取消</el-button><el-button type="primary" @click="saveEdit">保存并重新审核</el-button></template>
+      <template #footer>
+        <el-button @click="editDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveEdit">保存并重新审核</el-button>
+      </template>
     </el-dialog>
 
     <el-dialog v-model="aiDialog" title="AI 结构审核建议" width="680px">
@@ -317,12 +476,12 @@ onMounted(refreshList)
       <pre class="ai-suggestion">{{ aiSuggestion }}</pre>
     </el-dialog>
 
-    <el-dialog v-model="publishDialog" :title="`发布 ${selectedItem?.itemType || ''}`" width="560px">
+    <el-dialog v-model="publishDialog" :title="'发布 ' + (selectedItem?.itemType || '')" width="560px">
       <el-form v-if="selectedItem" label-position="top">
-        <template v-if="selectedItem.itemType==='LESSON'">
+        <template v-if="selectedItem.itemType === 'LESSON'">
           <el-form-item label="关联知识点 ID（逗号分隔）"><el-input v-model="publishForm.knowledgeIds" /></el-form-item>
         </template>
-        <template v-else-if="selectedItem.itemType==='KNOWLEDGE'">
+        <template v-else-if="selectedItem.itemType === 'KNOWLEDGE'">
           <el-form-item label="知识点 Code"><el-input v-model="publishForm.code" /></el-form-item>
           <el-form-item label="父知识点 ID（可空）"><el-input v-model="publishForm.parentId" /></el-form-item>
           <el-form-item label="重要度 1-5"><el-input-number v-model="publishForm.importance" :min="1" :max="5" /></el-form-item>
@@ -332,14 +491,26 @@ onMounted(refreshList)
         <template v-else>
           <el-form-item label="主知识点 ID"><el-input v-model="publishForm.knowledgeIds" /></el-form-item>
           <el-form-item label="难度">
-            <el-select v-model="publishForm.difficulty"><el-option label="EASY" value="EASY"/><el-option label="MEDIUM" value="MEDIUM"/><el-option label="HARD" value="HARD"/></el-select>
+            <el-select v-model="publishForm.difficulty">
+              <el-option label="EASY" value="EASY" />
+              <el-option label="MEDIUM" value="MEDIUM" />
+              <el-option label="HARD" value="HARD" />
+            </el-select>
           </el-form-item>
           <el-form-item label="题目来源">
-            <el-select v-model="publishForm.source"><el-option label="真题 REAL_EXAM" value="REAL_EXAM"/><el-option label="章节题 CHAPTER" value="CHAPTER"/><el-option label="模拟题 SIMULATION" value="SIMULATION"/><el-option label="人工资料 MANUAL" value="MANUAL"/></el-select>
+            <el-select v-model="publishForm.source">
+              <el-option label="真题 REAL_EXAM" value="REAL_EXAM" />
+              <el-option label="章节题 CHAPTER" value="CHAPTER" />
+              <el-option label="模拟题 SIMULATION" value="SIMULATION" />
+              <el-option label="人工资料 MANUAL" value="MANUAL" />
+            </el-select>
           </el-form-item>
         </template>
       </el-form>
-      <template #footer><el-button @click="publishDialog=false">取消</el-button><el-button type="primary" @click="doPublish">确认发布</el-button></template>
+      <template #footer>
+        <el-button @click="publishDialog = false">取消</el-button>
+        <el-button type="primary" @click="doPublish">确认发布</el-button>
+      </template>
     </el-dialog>
   </main>
 </template>
