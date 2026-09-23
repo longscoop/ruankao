@@ -1,0 +1,33 @@
+package com.longscoop.ruankao.assessment.persistence;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@TableName("assessment_item")
+public class AssessmentItemEntity {
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private UUID sessionId;
+    private Long questionId;
+    private Integer sortOrder;
+    private UUID answerRecordId;
+    private OffsetDateTime createdAt;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public UUID getSessionId() { return sessionId; }
+    public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
+    public Long getQuestionId() { return questionId; }
+    public void setQuestionId(Long questionId) { this.questionId = questionId; }
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+    public UUID getAnswerRecordId() { return answerRecordId; }
+    public void setAnswerRecordId(UUID answerRecordId) { this.answerRecordId = answerRecordId; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+}
