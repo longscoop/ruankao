@@ -140,7 +140,11 @@ AI_DAILY_REQUEST_LIMIT=20
 
 Create `nginx.conf` as a port-80 server block with root `/var/www/ruankao-admin`, SPA fallback `try_files $uri $uri/ /index.html`, `/api/` proxy to `http://127.0.0.1:8080`, and `/storage/` alias `/opt/ruankao/data/storage/` with `autoindex off` and `try_files $uri =404`. Include proxy headers `Host`, `X-Real-IP`, `X-Forwarded-For`, and `X-Forwarded-Proto`.
 
-Write `README.md` with exact `rsync`, Node 22 `npm ci && VITE_API_BASE_URL=/api npm run build`, Compose launch, `nginx -t`, reload, verification, update, and rollback commands. Rollback restores the host default Nginx site and starts the former `ruankao-postgres` container if verification fails.
+Write `README.md` with exact `rsync`, Node 22 `npm ci && npm run build` (the
+admin already uses absolute `/api/v1` paths), Compose launch, `nginx -t`,
+reload, verification, update, and rollback commands. Rollback restores the
+host default Nginx site and starts the former `ruankao-postgres` container if
+verification fails.
 
 - [ ] **Step 4: Validate configuration (GREEN)**
 
@@ -205,7 +209,7 @@ Run:
 
 ```bash
 rsync -az --delete --exclude '.git' --exclude 'target' --exclude 'node_modules' --exclude 'dist' --exclude '.env' ./ txy211:/opt/ruankao/source/
-ssh txy211 'set -eu; export PATH="/opt/node22/bin:$PATH"; cd /opt/ruankao/source/admin; npm ci; VITE_API_BASE_URL=/api npm run build; sudo install -d -m 0755 /var/www/ruankao-admin; sudo rsync -a --delete dist/ /var/www/ruankao-admin/'
+ssh txy211 'set -eu; export PATH="/opt/node22/bin:$PATH"; cd /opt/ruankao/source/admin; npm ci; npm run build; sudo install -d -m 0755 /var/www/ruankao-admin; sudo rsync -a --delete dist/ /var/www/ruankao-admin/'
 ```
 
 Expected: no local secret or generated build files transfer; `/var/www/ruankao-admin/index.html` exists. If `/opt/node22/bin` is unavailable, install/select Node 22 before building rather than using Node 24.
@@ -279,4 +283,3 @@ git status --short
 ```
 
 Expected: both services are running, admin is served, API authorization is enforced, and no secret or generated deployment artifact is in Git.
-

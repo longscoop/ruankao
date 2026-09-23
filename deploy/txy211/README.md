@@ -21,7 +21,9 @@ and install the static files:
 export PATH="/opt/node22/bin:$PATH"
 cd /opt/ruankao/source/admin
 npm install --no-package-lock
-VITE_API_BASE_URL=/api npm run check
+# The API modules already use absolute /api/v1 paths.  Leave the optional
+# base URL empty for same-origin Nginx deployment.
+npm run check
 sudo install -d -m 0755 /var/www/ruankao-admin
 sudo rsync -a --delete dist/ /var/www/ruankao-admin/
 sudo chmod -R a+rX /var/www/ruankao-admin

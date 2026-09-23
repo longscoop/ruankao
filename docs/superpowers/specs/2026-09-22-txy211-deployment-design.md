@@ -47,8 +47,9 @@ No application, PostgreSQL, AI, WeChat, or storage secret is committed to Git.
 ### Host Nginx
 
 Nginx serves the admin production build from `/var/www/ruankao-admin`.
-The production admin build has `VITE_API_BASE_URL=/api`, so API calls are
-same-origin. Nginx proxies `/api/` to the loopback-bound server and serves
+The production admin build leaves `VITE_API_BASE_URL` unset because its API
+modules already use same-origin `/api/v1` paths. Nginx proxies `/api/` to the
+loopback-bound server and serves
 `/storage/` read-only from the host bind mount. The default Nginx site is
 disabled only after the new configuration passes `nginx -t`.
 
