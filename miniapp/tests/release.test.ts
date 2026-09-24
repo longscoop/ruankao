@@ -1,6 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { validateApiBaseUrl } from '../src/lib/release.ts'
+import { resolveApiBaseUrl, validateApiBaseUrl } from '../src/lib/release.ts'
+
+test('production build defaults to the deployed HTTPS API domain', () => {
+  assert.equal(resolveApiBaseUrl(undefined, true), 'https://www.e68q.cn')
+  assert.equal(resolveApiBaseUrl('', true), 'https://www.e68q.cn')
+  assert.equal(resolveApiBaseUrl('https://staging.e68q.cn/', true), 'https://staging.e68q.cn')
+  assert.equal(resolveApiBaseUrl(undefined, false), 'http://localhost:8080')
+})
 
 test('production API base URL must be a real HTTPS endpoint', () => {
   assert.equal(validateApiBaseUrl('https://api.ruankao.cn', true), null)

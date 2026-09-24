@@ -1,3 +1,7 @@
+export function resolveApiBaseUrl(value: string | undefined, production: boolean): string {
+  return (value?.trim() || (production ? 'https://www.e68q.cn' : 'http://localhost:8080')).replace(/\/$/, '')
+}
+
 export function validateApiBaseUrl(value: string, production: boolean): string | null {
   const text = value.trim()
   if (!text) return 'API 地址不能为空'
