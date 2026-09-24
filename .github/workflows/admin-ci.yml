@@ -3,7 +3,8 @@ name: Admin CI
 on:
   push:
     branches:
-      - feat/soft-exam-v1
+      - main
+      - 'feat/**'
     paths:
       - 'admin/**'
       - '.github/workflows/admin-ci.yml'
