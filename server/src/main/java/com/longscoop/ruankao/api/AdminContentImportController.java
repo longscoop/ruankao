@@ -44,7 +44,7 @@ public class AdminContentImportController {
     }
 
     @PostMapping(value = "/pdf", consumes = "multipart/form-data")
-    public ResponseEntity<ContentImportService.DryRunResult> upload(
+    public ResponseEntity<?> upload(
             @AuthenticationPrincipal RuankaoPrincipal principal,
             @RequestParam long examId,
             @RequestPart("file") MultipartFile file) {
@@ -55,6 +55,8 @@ public class AdminContentImportController {
                             file.getOriginalFilename(),
                             file.getBytes(),
                             principal.userId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "failed to read PDF", e);
         }
