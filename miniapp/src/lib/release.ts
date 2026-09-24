@@ -1,7 +1,5 @@
 export function resolveApiBaseUrl(value: string | undefined, production: boolean): string {
   const baseUrl = value?.trim() || (production ? 'https://www.e68q.cn' : 'http://localhost:8080')
-  const error = validateApiBaseUrl(baseUrl, production)
-  if (error) throw new Error(error)
   return baseUrl.replace(/\/$/, '')
 }
 
