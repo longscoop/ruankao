@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.List;
 
 @Component
@@ -22,7 +23,7 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
             @Value("${AI_API_KEY:}") String apiKey,
             @Value("${AI_PROVIDER_NAME:openai-compatible}") String providerName,
             @Value("${AI_MODEL:qwen-plus}") String model) {
-        this.restClient = restClientBuilder.build();
+        this.restClient = AiHttpClientFactory.create(restClientBuilder, Duration.ofSeconds(10), Duration.ofSeconds(45));
         this.baseUrl = normalizeBaseUrl(baseUrl);
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.providerName = providerName == null || providerName.isBlank()
