@@ -4,7 +4,8 @@ This deployment uses host Nginx, Docker Compose for the Java server and
 PostgreSQL, and host bind mounts for persistent data.
 
 The public origin is `https://www.e68q.cn`. Nginx uses the existing
-Let's Encrypt certificate at `/etc/letsencrypt/live/www.e68q.cn/`.
+Let's Encrypt certificate at `/etc/letsencrypt/live/www.e68q.cn/`. All HTTP
+requests, including requests to the server IP, redirect to that HTTPS origin.
 
 ## Initial deployment
 

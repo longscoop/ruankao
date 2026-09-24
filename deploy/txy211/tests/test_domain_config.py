@@ -15,6 +15,12 @@ class DomainConfigTest(unittest.TestCase):
         self.assertIn("proxy_pass http://127.0.0.1:8080;", config)
         self.assertIn("alias /opt/ruankao/data/storage/;", config)
 
+    def test_http_never_serves_the_api_or_admin(self):
+        config = (DEPLOY_DIR / "nginx.conf").read_text()
+        self.assertIn("listen 80 default_server;", config)
+        self.assertEqual(config.count("proxy_pass http://127.0.0.1:8080;"), 1)
+        self.assertEqual(config.count("root /var/www/ruankao-admin;"), 1)
+
     def test_server_receives_wechat_login_settings(self):
         compose = (DEPLOY_DIR / "docker-compose.yml").read_text()
         self.assertIn("WECHAT_APP_ID: ${WECHAT_APP_ID:?", compose)
