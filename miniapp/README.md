@@ -29,7 +29,7 @@ VITE_API_BASE_URL=
 VITE_API_TIMEOUT_MS=10000
 ```
 
-开发构建默认请求 `http://localhost:8080`，生产构建默认使用 `https://www.e68q.cn`。如果 `.env.local` 中设置了 `VITE_API_BASE_URL`，它会覆盖默认值；构建前应确认它是正确的地址。微信 `appid` 请在发布环境/开发者工具中配置，不要把 AppSecret、支付密钥或 AI Key 提交到仓库。
+开发构建默认请求 `http://localhost:8080`，生产构建默认使用 `https://www.e68q.cn`。如果 `.env.local` 中设置了 `VITE_API_BASE_URL`，它会覆盖默认值；生产构建会拒绝 HTTP、localhost、IP 和示例地址。微信 `appid` 请在发布环境/开发者工具中配置，不要把 AppSecret、支付密钥或 AI Key 提交到仓库。
 
 ## 已实现页面
 
