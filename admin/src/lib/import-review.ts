@@ -1,5 +1,12 @@
 import type { ImportItem, QuestionKnowledgeLink } from '../types/import.ts'
 
+export function selectExamId(
+  current: number | undefined,
+  exams: ReadonlyArray<{ id: number }>,
+): number | undefined {
+  return exams.find(exam => exam.id === current)?.id ?? exams[0]?.id
+}
+
 export function parseKnowledgeIds(value: string): number[] {
   const result: number[] = []
   for (const part of value.split(',')) {
