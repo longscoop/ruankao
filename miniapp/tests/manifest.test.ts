@@ -6,3 +6,8 @@ test('WeChat miniapp enables component on-demand injection', () => {
   const manifest = JSON.parse(readFileSync(new URL('../src/manifest.json', import.meta.url), 'utf8'))
   assert.equal(manifest['mp-weixin'].lazyCodeLoading, 'requiredComponents')
 })
+
+test('WeChat miniapp builds with the registered AppID', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../src/manifest.json', import.meta.url), 'utf8'))
+  assert.equal(manifest['mp-weixin'].appid, 'wx835c1ffe3a7ccb60')
+})
