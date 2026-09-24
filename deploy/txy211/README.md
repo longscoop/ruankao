@@ -6,6 +6,8 @@ PostgreSQL, and host bind mounts for persistent data.
 The public origin is `https://www.e68q.cn`. Nginx uses the existing
 Let's Encrypt certificate at `/etc/letsencrypt/live/www.e68q.cn/`. All HTTP
 requests, including requests to the server IP, redirect to that HTTPS origin.
+PDF imports accept files up to 20 MB; the Nginx API body limit and Spring
+multipart request limit are 25 MB to allow for form overhead.
 
 ## Initial deployment
 
