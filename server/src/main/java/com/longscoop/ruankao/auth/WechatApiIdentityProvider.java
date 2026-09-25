@@ -1,24 +1,30 @@
 package com.longscoop.ruankao.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.io.IOException;
 
 @Component
 public class WechatApiIdentityProvider implements WechatIdentityProvider {
 
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
     private final String appId;
     private final String appSecret;
     private final String apiBaseUrl;
 
     public WechatApiIdentityProvider(
             RestClient.Builder restClientBuilder,
+            ObjectMapper objectMapper,
             @Value("${WECHAT_APP_ID:}") String appId,
             @Value("${WECHAT_APP_SECRET:}") String appSecret,
             @Value("${WECHAT_API_BASE_URL:https://api.weixin.qq.com}") String apiBaseUrl) {
         this.restClient = restClientBuilder.build();
+        this.objectMapper = objectMapper;
         this.appId = appId;
         this.appSecret = appSecret;
         this.apiBaseUrl = apiBaseUrl;
@@ -33,14 +39,23 @@ public class WechatApiIdentityProvider implements WechatIdentityProvider {
             throw new IllegalStateException("WECHAT_APP_ID and WECHAT_APP_SECRET must be configured");
         }
 
-        WechatCodeResponse response = restClient.get()
+        byte[] responseBody = restClient.get()
                 .uri(apiBaseUrl + "/sns/jscode2session"
                                 + "?appid={appid}&secret={secret}&js_code={code}"
                                 + "&grant_type=authorization_code",
                         appId, appSecret, code.trim())
                 .retrieve()
-                .body(WechatCodeResponse.class);
+                .body(byte[].class);
 
+        if (responseBody == null || responseBody.length == 0) {
+            throw new IllegalStateException("empty response from WeChat");
+        }
+        WechatCodeResponse response;
+        try {
+            response = objectMapper.readValue(responseBody, WechatCodeResponse.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("invalid response from WeChat");
+        }
         if (response == null) {
             throw new IllegalStateException("empty response from WeChat");
         }

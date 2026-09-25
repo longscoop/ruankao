@@ -10,6 +10,7 @@ import type { DailyPlanDto } from '@/types/api'
 const plan = ref<DailyPlanDto | null>(null)
 const loading = ref(false)
 const error = ref('')
+const needsProfile = ref(false)
 const session = useSessionStore()
 const summary = computed(() => plan.value ? summarizePlan(plan.value) : null)
 
@@ -18,10 +19,16 @@ async function load() {
   if (!session.token) return
   loading.value = true
   error.value = ''
+  needsProfile.value = false
   try {
     plan.value = await getTodayPlan()
   } catch (e) {
-    error.value = (e as AppRequestError).message || '今日计划加载失败'
+    plan.value = null
+    if ((e as AppRequestError).code === 'EXAM_PROFILE_REQUIRED') {
+      needsProfile.value = true
+    } else {
+      error.value = (e as AppRequestError).message || '今日计划加载失败'
+    }
   } finally {
     loading.value = false
   }
@@ -38,6 +45,12 @@ onShow(load)
       <text class="card-title">先完成学习设置</text>
       <text class="muted">登录、选择目标考试和每日学习时长后，服务端会生成你的今日计划。</text>
       <button class="primary small" @tap="uni.navigateTo({ url: '/pages/onboarding/welcome' })">开始设置</button>
+    </view>
+
+    <view v-else-if="needsProfile" class="ruankao-card setup-card">
+      <text class="card-title">先设置目标考试</text>
+      <text class="muted">选择考试日期和每日学习时长后，才能生成今日计划。</text>
+      <button class="primary small" @tap="uni.navigateTo({ url: '/pages/onboarding/profile' })">去设置考试</button>
     </view>
 
     <view v-else-if="plan" class="ruankao-card focus-card" @tap="uni.navigateTo({ url: '/pages/learning/today' })">
