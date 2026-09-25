@@ -98,6 +98,11 @@ public class AdminContentImportController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{batchId}/source-lessons")
+    public List<Long> createSourceLessons(@PathVariable UUID batchId) {
+        return importService.createSourceLessons(batchId);
+    }
+
     @PostMapping("/{batchId}/items/{itemId}/approve")
     public ResponseEntity<Void> approve(
             @PathVariable UUID batchId,

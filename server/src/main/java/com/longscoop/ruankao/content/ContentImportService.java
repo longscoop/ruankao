@@ -25,6 +25,9 @@ import java.util.HexFormat;
 @Service
 public class ContentImportService {
 
+    private static final int SOURCE_LESSON_PAGE_COUNT = 12;
+    private static final String SOURCE_LESSON_KEY_PREFIX = "source-pages-";
+
     private final ExamMapper examMapper;
     private final StorageProvider storageProvider;
     private final PdfDocumentExtractor extractor;
@@ -203,6 +206,68 @@ public class ContentImportService {
                 batch.getDetectedType(), batch.getStatus(), batch.getTitle(),
                 batch.getPageCount(), batch.getMaterializedCourseId(),
                 pages, items, issues));
+    }
+
+    @Transactional
+    public List<Long> createSourceLessons(UUID batchId) {
+        ContentImportBatchEntity batch = requireBatch(batchId);
+        List<ContentImportItemEntity> existing = itemMapper.selectList(
+                Wrappers.<ContentImportItemEntity>lambdaQuery()
+                        .eq(ContentImportItemEntity::getBatchId, batchId)
+                        .likeRight(ContentImportItemEntity::getItemKey, SOURCE_LESSON_KEY_PREFIX)
+                        .orderByAsc(ContentImportItemEntity::getSourcePageStart));
+        int expectedCount = (batch.getPageCount() + SOURCE_LESSON_PAGE_COUNT - 1)
+                / SOURCE_LESSON_PAGE_COUNT;
+        if (!existing.isEmpty()) {
+            if (existing.size() != expectedCount) {
+                throw new IllegalStateException("source lessons are incomplete");
+            }
+            return existing.stream().map(ContentImportItemEntity::getId).toList();
+        }
+        if (batch.getStatus() != ImportBatchStatus.REVIEWING) {
+            throw new IllegalStateException("source lessons must be created before confirm");
+        }
+
+        List<ContentImportPageEntity> pages = pageMapper.selectList(
+                Wrappers.<ContentImportPageEntity>lambdaQuery()
+                        .eq(ContentImportPageEntity::getBatchId, batchId)
+                        .orderByAsc(ContentImportPageEntity::getPageNumber));
+        if (pages.size() != batch.getPageCount()) {
+            throw new IllegalStateException("source page count does not match PDF");
+        }
+        for (int index = 0; index < pages.size(); index++) {
+            ContentImportPageEntity page = pages.get(index);
+            if (page.getPageNumber() != index + 1
+                    || page.getImageObjectKey() == null
+                    || page.getImageObjectKey().isBlank()) {
+                throw new IllegalStateException("source page evidence is incomplete");
+            }
+        }
+
+        List<Long> itemIds = new ArrayList<>();
+        for (int offset = 0; offset < pages.size(); offset += SOURCE_LESSON_PAGE_COUNT) {
+            List<ContentImportPageEntity> group = pages.subList(
+                    offset, Math.min(offset + SOURCE_LESSON_PAGE_COUNT, pages.size()));
+            int first = group.get(0).getPageNumber();
+            int last = group.get(group.size() - 1).getPageNumber();
+            List<ParsedBlock> blocks = new ArrayList<>();
+            for (ContentImportPageEntity page : group) {
+                if (page.getTextContent() != null && !page.getTextContent().isBlank()) {
+                    blocks.add(new ParsedBlock(LessonBlockType.TEXT,
+                            page.getTextContent(), null, page.getPageNumber()));
+                }
+                blocks.add(new ParsedBlock(LessonBlockType.IMAGE,
+                        null, page.getImageObjectKey(), page.getPageNumber()));
+            }
+            String key = SOURCE_LESSON_KEY_PREFIX + first + "-" + last;
+            String title = first == last ? "原始资料 · 第 " + first + " 页"
+                    : "原始资料 · 第 " + first + "–" + last + " 页";
+            itemIds.add(insertItem(batchId, ImportItemType.LESSON, key,
+                    first, last, title,
+                    new ParsedLesson(key, title, first, last, List.copyOf(blocks)),
+                    offset / SOURCE_LESSON_PAGE_COUNT));
+        }
+        return List.copyOf(itemIds);
     }
 
     @Transactional

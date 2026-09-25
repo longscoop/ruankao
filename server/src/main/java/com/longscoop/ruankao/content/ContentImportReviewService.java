@@ -89,7 +89,7 @@ public class ContentImportReviewService {
                 .map(x -> new BatchSummary(
                         x.getId(), x.getExamId(), x.getFilename(), x.getTitle(),
                         x.getDetectedType(), x.getStatus(), x.getPageCount(),
-                        x.getMaterializedCourseId(), x.getCreatedAt()))
+                        x.getMaterializedCourseId(), x.getCreatedAt(), x.getSha256()))
                 .toList();
     }
 
@@ -250,11 +250,13 @@ public class ContentImportReviewService {
             throw new IllegalStateException("lesson must be confirmed before publish");
         }
         requireNoOpenErrors(batchId, itemId);
-        if (knowledgeIds == null || knowledgeIds.isEmpty()) {
+        if ((knowledgeIds == null || knowledgeIds.isEmpty())
+                && !item.getItemKey().startsWith("source-pages-")) {
             throw new IllegalArgumentException("at least one knowledgeId is required");
         }
 
-        for (Long knowledgeId : knowledgeIds.stream().distinct().toList()) {
+        for (Long knowledgeId : (knowledgeIds == null ? List.<Long>of() : knowledgeIds)
+                .stream().distinct().toList()) {
             KnowledgePointEntity knowledge = knowledgePointMapper.selectById(knowledgeId);
             if (knowledge == null || !knowledge.getExamId().equals(batch.getExamId())) {
                 throw new IllegalArgumentException("knowledge must belong to import exam");
@@ -366,6 +368,7 @@ public class ContentImportReviewService {
             ImportBatchStatus status,
             int pageCount,
             Long courseId,
-            OffsetDateTime createdAt) {
+            OffsetDateTime createdAt,
+            String sha256) {
     }
 }
