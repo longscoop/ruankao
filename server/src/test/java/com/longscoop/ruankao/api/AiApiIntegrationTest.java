@@ -1,8 +1,10 @@
 package com.longscoop.ruankao.api;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.longscoop.ruankao.ai.AiProvider;
 import com.longscoop.ruankao.ai.AiProviderResponse;
+import com.longscoop.ruankao.ai.persistence.AiUsageLogEntity;
 import com.longscoop.ruankao.ai.persistence.AiUsageLogMapper;
 import com.longscoop.ruankao.auth.RuankaoPrincipal;
 import com.longscoop.ruankao.exam.ExamService;
@@ -89,7 +91,8 @@ class AiApiIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("清晰的解释"));
 
-        assertEquals(2, usageLogMapper.selectCount(null));
+        assertEquals(2, usageLogMapper.selectCount(
+                new QueryWrapper<AiUsageLogEntity>().eq("user_id", 1401L)));
     }
 
 

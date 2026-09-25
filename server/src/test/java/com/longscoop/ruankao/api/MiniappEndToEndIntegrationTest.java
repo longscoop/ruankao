@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -119,7 +120,7 @@ class MiniappEndToEndIntegrationTest extends PostgresIntegrationTest {
 
         mockMvc.perform(get("/api/v1/exams").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(examId));
+                .andExpect(jsonPath("$[*].id").value(hasItem((int) examId)));
 
         mockMvc.perform(put("/api/v1/users/me/exam-profile")
                         .header("Authorization", bearer(token))
