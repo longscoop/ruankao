@@ -49,6 +49,27 @@ class SourcePdfMaterialImportIntegrationTest extends PostgresIntegrationTest {
     @MockBean StorageProvider storage;
 
     @Test
+    void nullControlCharacterInExtractedTextDoesNotAbortPagePersistence() throws Exception {
+        long examId = exams.create("nul-source-pdf", "System Architect", ExamStatus.ACTIVE);
+        when(extractor.extract(any())).thenReturn(List.of(
+                new ExtractedPdfPage(1, "Before\u0000After", new byte[]{1, 2, 3})));
+        when(storage.upload(any())).thenAnswer(call -> {
+            var upload = (com.longscoop.ruankao.storage.StorageUploadRequest) call.getArgument(0);
+            return new StoredObject(upload.objectKey(), upload.contentType(), upload.contentLength());
+        });
+
+        String upload = mvc.perform(multipart("/api/v1/admin/imports/pdf")
+                        .file(new MockMultipartFile("file", "nul.pdf", "application/pdf", new byte[]{1, 2, 3}))
+                        .param("examId", String.valueOf(examId)).with(admin()))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String batchId = json.readTree(upload).get("batchId").asText();
+        mvc.perform(get("/api/v1/admin/imports/{id}", batchId).with(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pages[0].textContent").value("BeforeAfter"));
+    }
+
+    @Test
     void sourcePagesAreChunkedOnceAndRemainReadableWithoutInventedKnowledge() throws Exception {
         long examId = exams.create("source-material-exam", "System Architect", ExamStatus.ACTIVE);
         List<ExtractedPdfPage> pages = new ArrayList<>();

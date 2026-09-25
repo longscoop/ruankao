@@ -176,4 +176,21 @@ class PdfContentParserTest {
         assertNotEquals(document.lessons().get(0).key(), document.lessons().get(2).key());
     }
 
+    @Test
+    void repeatedQuestionNumberOnOnePageKeepsDistinctImportKeys() {
+        ParsedDocument document = parser.parse(List.of(new ParsedPage(9, """
+                1、第一题？
+                A、甲
+                B、乙
+                答案：A
+                1、第二题？
+                A、丙
+                B、丁
+                答案：B
+                """, "pages/9.png")));
+
+        assertEquals(2, document.questions().size());
+        assertNotEquals(document.questions().get(0).key(), document.questions().get(1).key());
+    }
+
 }

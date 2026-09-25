@@ -101,7 +101,8 @@ public class ContentImportService {
                     "image/png",
                     page.pngBytes().length,
                     new ByteArrayInputStream(page.pngBytes())));
-            parsedPages.add(new ParsedPage(page.pageNumber(), page.text(), imageKey));
+            parsedPages.add(new ParsedPage(page.pageNumber(),
+                    page.text() == null ? "" : page.text().replace("\u0000", ""), imageKey));
         }
 
         ParsedDocument parsed = parser.parse(parsedPages);

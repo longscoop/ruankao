@@ -135,6 +135,7 @@ public class PdfContentParser {
         List<QuestionDraft> result = new ArrayList<>();
         QuestionDraft current = null;
         String pendingLabel = null;
+        int questionOrdinal = 0;
 
         for (ParsedPage page : pages) {
             List<String> lines = lines(normalize(page.text()));
@@ -179,7 +180,8 @@ public class PdfContentParser {
                             page.pageNumber(),
                             numbered.group(1),
                             numbered.group(2).trim(),
-                            pendingLabel);
+                            pendingLabel,
+                            questionOrdinal++);
                     pendingLabel = null;
                     continue;
                 }
@@ -189,7 +191,8 @@ public class PdfContentParser {
                             page.pageNumber(),
                             null,
                             line,
-                            pendingLabel);
+                            pendingLabel,
+                            questionOrdinal++);
                     pendingLabel = null;
                     continue;
                 }
@@ -407,18 +410,22 @@ public class PdfContentParser {
         private final LinkedHashMap<String, String> options = new LinkedHashMap<>();
         private final List<String> explanation = new ArrayList<>();
         private final String sourceLabel;
+        private final int ordinal;
         private QuestionType questionType = QuestionType.SINGLE_CHOICE;
         private String answer;
         private boolean inExplanation;
         private boolean requiresReview;
         private int optionOccurrences;
 
-        private QuestionDraft(int pageNumber, String questionNo, String firstLine, String sourceLabel) {
+        private QuestionDraft(
+                int pageNumber, String questionNo, String firstLine,
+                String sourceLabel, int ordinal) {
             this.sourcePageStart = pageNumber;
             this.sourcePageEnd = pageNumber;
             this.questionNo = questionNo;
             this.content.add(firstLine);
             this.sourceLabel = sourceLabel;
+            this.ordinal = ordinal;
         }
 
         private void touch(int pageNumber) {
@@ -426,7 +433,8 @@ public class PdfContentParser {
         }
 
         private String key() {
-            return "question-" + sourcePageStart + "-" + (questionNo == null ? "embedded" : questionNo);
+            return "question-" + sourcePageStart + "-"
+                    + (questionNo == null ? "embedded" : questionNo) + "-" + ordinal;
         }
 
         private ParsedQuestion toParsed() {

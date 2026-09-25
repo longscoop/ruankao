@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -28,12 +30,15 @@ import static org.mockito.Mockito.when;
         "ruankao.admin.username=upload-test-admin", "ruankao.admin.password=upload-test-password"})
 class LargePdfUploadHttpIntegrationTest extends PostgresIntegrationTest {
     @Autowired TestRestTemplate http;
+    @Autowired MultipartProperties multipartProperties;
     @Autowired ExamService exams;
     @MockBean PdfDocumentExtractor extractor;
     @MockBean StorageProvider storage;
 
     @Test
-    void twoMegabytePdfReachesTheImportController() {
+    void uploadLimitCoversLargestSourcePdfAndRequestReachesController() {
+        assertTrue(multipartProperties.getMaxFileSize().toBytes() >= 57_000_000);
+        assertTrue(multipartProperties.getMaxRequestSize().toBytes() >= 57_000_000);
         long examId = exams.create("large-pdf-http", "System Architect", ExamStatus.INACTIVE);
         when(extractor.extract(any())).thenReturn(List.of(
                 new ExtractedPdfPage(1, "Large source PDF", new byte[]{1, 2, 3})));
