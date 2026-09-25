@@ -29,6 +29,21 @@ test('preserves missing exam profile as an onboarding action', () => {
   })
 })
 
+test('shows the assessment availability reason from the API', () => {
+  assert.deepEqual(normalizeRequestError({
+    statusCode: 409,
+    message: {
+      code: 'INSUFFICIENT_PUBLISHED_QUESTIONS',
+      message: '已发布题目不足，暂时无法开始摸底，请先跳过',
+    },
+  }), {
+    code: 'INSUFFICIENT_PUBLISHED_QUESTIONS',
+    statusCode: 409,
+    message: '已发布题目不足，暂时无法开始摸底，请先跳过',
+    retryable: false,
+  })
+})
+
 test('accepts only supported daily target minutes and future exam date', () => {
   assert.deepEqual(validateExamProfile({ examId: 1, examDate: '2026-11-01', dailyTargetMinutes: 30 }, '2026-09-21'), [])
   assert.ok(validateExamProfile({ examId: 0, examDate: '2026-09-20', dailyTargetMinutes: 20 }, '2026-09-21').length >= 3)

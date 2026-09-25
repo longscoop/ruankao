@@ -7,6 +7,7 @@ import type { AppRequestError } from '@/lib/errors'
 const examId = ref(0)
 const loading = ref(false)
 const error = ref('')
+const unavailable = ref(false)
 
 onLoad((query) => {
   examId.value = Number(query?.examId || 0)
@@ -19,6 +20,7 @@ async function start() {
     const result = await startAssessment(examId.value, 20)
     uni.redirectTo({ url: `/pages/assessment/session?sessionId=${result.sessionId}` })
   } catch (e) {
+    unavailable.value = (e as AppRequestError).code === 'INSUFFICIENT_PUBLISHED_QUESTIONS'
     error.value = (e as AppRequestError).message || '摸底测试暂时无法开始'
   } finally {
     loading.value = false
@@ -42,7 +44,7 @@ function skip() {
       <text>答题时可以标记“蒙的 / 不确定 / 确定”，帮助学习引擎判断证据强度。</text>
     </view>
     <text v-if="error" class="error">{{ error }}</text>
-    <button class="primary" :loading="loading" @tap="start">开始摸底</button>
+    <button v-if="!unavailable" class="primary" :loading="loading" @tap="start">开始摸底</button>
     <button class="ghost" @tap="skip">先跳过，直接学习</button>
   </view>
 </template>

@@ -1,4 +1,4 @@
-export type RequestErrorCode = 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND' | 'EXAM_PROFILE_REQUIRED' | 'NETWORK' | 'SERVER' | 'UNKNOWN'
+export type RequestErrorCode = 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND' | 'EXAM_PROFILE_REQUIRED' | 'INSUFFICIENT_PUBLISHED_QUESTIONS' | 'NETWORK' | 'SERVER' | 'UNKNOWN'
 
 export interface AppRequestError {
   code: RequestErrorCode
@@ -23,6 +23,9 @@ export function normalizeRequestError(error: unknown): AppRequestError {
   if (statusCode === 403) return { code: 'FORBIDDEN', statusCode, message: '当前账号没有访问权限', retryable: false }
   if (statusCode === 404 && response?.code === 'EXAM_PROFILE_REQUIRED') {
     return { code: 'EXAM_PROFILE_REQUIRED', statusCode, message: response.message || '请先设置目标考试', retryable: false }
+  }
+  if (statusCode === 409 && response?.code === 'INSUFFICIENT_PUBLISHED_QUESTIONS') {
+    return { code: 'INSUFFICIENT_PUBLISHED_QUESTIONS', statusCode, message: response.message || '已发布题目不足，请先跳过摸底', retryable: false }
   }
   if (statusCode === 404) return { code: 'NOT_FOUND', statusCode, message: '请求的内容暂不存在', retryable: false }
   if (statusCode && statusCode >= 500) return { code: 'SERVER', statusCode, message: '服务暂时不可用，请稍后重试', retryable: true }
