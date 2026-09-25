@@ -3,6 +3,7 @@ package com.longscoop.ruankao.api;
 import com.longscoop.ruankao.assessment.AssessmentAnswerResult;
 import com.longscoop.ruankao.assessment.AssessmentResult;
 import com.longscoop.ruankao.assessment.AssessmentService;
+import com.longscoop.ruankao.assessment.InsufficientPublishedQuestionsException;
 import com.longscoop.ruankao.auth.RuankaoPrincipal;
 import com.longscoop.ruankao.learning.model.AnswerConfidence;
 import com.longscoop.ruankao.question.QuestionSessionService;
@@ -36,16 +37,25 @@ public class AssessmentController {
     }
 
     @PostMapping
-    public ResponseEntity<StartAssessmentResponse> start(
+    public ResponseEntity<?> start(
             @AuthenticationPrincipal RuankaoPrincipal principal,
             @RequestBody StartAssessmentRequest request) {
-        UUID sessionId = assessmentService.start(
-                principal.userId(),
-                request.examId(),
-                request.questionCount());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new StartAssessmentResponse(sessionId));
+        try {
+            UUID sessionId = assessmentService.start(
+                    principal.userId(),
+                    request.examId(),
+                    request.questionCount());
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new StartAssessmentResponse(sessionId));
+        } catch (InsufficientPublishedQuestionsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new StartAssessmentUnavailableResponse(
+                            "INSUFFICIENT_PUBLISHED_QUESTIONS",
+                            "已发布题目不足，暂时无法开始摸底，请先跳过",
+                            e.requiredCount(),
+                            e.availableCount()));
+        }
     }
 
     @GetMapping("/{sessionId}/questions")
@@ -105,6 +115,13 @@ public class AssessmentController {
     }
 
     public record StartAssessmentResponse(UUID sessionId) {
+    }
+
+    public record StartAssessmentUnavailableResponse(
+            String code,
+            String message,
+            int requiredQuestions,
+            int availableQuestions) {
     }
 
     public record AssessmentQuestionResponse(

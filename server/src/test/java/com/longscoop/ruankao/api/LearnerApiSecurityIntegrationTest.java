@@ -103,6 +103,26 @@ class LearnerApiSecurityIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void assessmentWithoutPublishedQuestionsReturnsConflict() throws Exception {
+        long examId = examService.create(
+                "api-empty-assessment", "Empty Assessment", ExamStatus.ACTIVE);
+        profileService.upsert(
+                905L, examId, LocalDate.now().plusMonths(2), 30,
+                com.longscoop.ruankao.user.model.FoundationLevel.SOME);
+
+        mockMvc.perform(post("/api/v1/assessments")
+                        .with(user(905L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "examId", examId,
+                                "questionCount", 20))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INSUFFICIENT_PUBLISHED_QUESTIONS"))
+                .andExpect(jsonPath("$.requiredQuestions").value(20))
+                .andExpect(jsonPath("$.availableQuestions").value(0));
+    }
+
+    @Test
     void assessmentEndpointsUsePrincipalOwnershipAndNeverExposeStandardAnswer() throws Exception {
         Fixture fixture = fixture("api-assessment", 903L);
 
