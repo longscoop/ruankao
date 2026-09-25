@@ -165,4 +165,15 @@ class PdfContentParserTest {
         assertFalse(document.issues().stream().anyMatch(x -> x.code().equals("MISSING_ANSWER")));
     }
 
+    @Test
+    void repeatedNonAdjacentHeadingsKeepDistinctImportKeys() {
+        ParsedDocument document = parser.parse(List.of(
+                new ParsedPage(1, "[问题 2]\n第一段原文", "pages/1.png"),
+                new ParsedPage(2, "案例背景\n背景原文", "pages/2.png"),
+                new ParsedPage(3, "[问题 2]\n第二段原文", "pages/3.png")));
+
+        assertEquals(3, document.lessons().size());
+        assertNotEquals(document.lessons().get(0).key(), document.lessons().get(2).key());
+    }
+
 }

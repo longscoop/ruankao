@@ -22,6 +22,7 @@ public abstract class PostgresIntegrationTest {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
+        registry.add("spring.datasource.hikari.maximum-pool-size", () -> 4);
         registry.add("spring.flyway.enabled", () -> true);
     }
 }

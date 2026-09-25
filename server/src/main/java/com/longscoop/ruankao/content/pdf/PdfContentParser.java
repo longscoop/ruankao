@@ -60,7 +60,7 @@ public class PdfContentParser {
             if (!hasExplicitQuestionBankShape && !isTypicalQuestionPage && !isTocPage && !isCoverPage) {
                 String heading = detectHeading(lines);
                 if (heading != null) {
-                    String key = slug("lesson-" + heading);
+                    String key = slug("lesson-" + page.pageNumber() + "-" + heading);
                     ParsedLesson lesson = new ParsedLesson(
                             key,
                             heading,
