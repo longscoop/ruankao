@@ -75,7 +75,7 @@ public class AssessmentService {
                         .last("limit " + questionCount));
 
         if (questions.size() < questionCount) {
-            throw new IllegalStateException("insufficient published questions");
+            throw new InsufficientPublishedQuestionsException(questionCount, questions.size());
         }
 
         AssessmentSessionEntity session = new AssessmentSessionEntity();

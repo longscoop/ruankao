@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,17 +36,19 @@ class ExamServiceIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void listsOnlyActiveExamsInIdOrder() {
+        List<ExamEntity> catalog = examService.listActive();
+        assertTrue(catalog.stream().anyMatch(exam ->
+                exam.getCode().equals("SYSTEM_ARCHITECT_DESIGNER")));
+        List<Long> expectedIds = new ArrayList<>(catalog.stream()
+                .map(ExamEntity::getId).sorted().toList());
         long first = examService.create("active-1", "Active 1", ExamStatus.ACTIVE);
         examService.create("inactive", "Inactive", ExamStatus.INACTIVE);
         long second = examService.create("active-2", "Active 2", ExamStatus.ACTIVE);
+        expectedIds.addAll(List.of(first, second));
 
         List<ExamEntity> active = examService.listActive();
 
-        List<Long> createdActiveIds = active.stream()
-                .map(ExamEntity::getId)
-                .filter(id -> id.equals(first) || id.equals(second))
-                .toList();
-        assertEquals(List.of(first, second), createdActiveIds);
+        assertEquals(expectedIds, active.stream().map(ExamEntity::getId).toList());
         assertTrue(active.stream().noneMatch(exam -> exam.getCode().equals("inactive")));
     }
 

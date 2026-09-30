@@ -9,13 +9,19 @@ import type { DailyPlanDto } from '@/types/api'
 const plan = ref<DailyPlanDto | null>(null)
 const loading = ref(false)
 const error = ref('')
+const needsProfile = ref(false)
 const summary = computed(() => plan.value ? summarizePlan(plan.value) : null)
 
 async function load() {
   loading.value = true
   error.value = ''
+  needsProfile.value = false
   try { plan.value = await getTodayPlan() }
-  catch (e) { error.value = (e as AppRequestError).message || '计划加载失败' }
+  catch (e) {
+    plan.value = null
+    if ((e as AppRequestError).code === 'EXAM_PROFILE_REQUIRED') needsProfile.value = true
+    else error.value = (e as AppRequestError).message || '计划加载失败'
+  }
   finally { loading.value = false }
 }
 
@@ -24,6 +30,11 @@ onShow(load)
 
 <template>
   <view class="ruankao-page">
+    <view v-if="needsProfile" class="empty ruankao-card">
+      <text class="empty-title">先设置目标考试</text>
+      <text class="muted">选择考试日期和每日学习时长后，才能生成今日计划。</text>
+      <button class="retry" @tap="uni.navigateTo({ url: '/pages/onboarding/profile' })">去设置考试</button>
+    </view>
     <view v-if="plan" class="summary ruankao-card">
       <text class="date">{{ plan.planDate }}</text>
       <text class="title">今天安排 {{ summary?.plannedMinutes }} 分钟</text>
@@ -36,7 +47,7 @@ onShow(load)
         <text class="arrow">›</text>
       </view>
     </view>
-    <view v-else-if="!loading && !error" class="empty ruankao-card"><text class="empty-title">今天没有待执行任务</text><text class="muted">当学习档案和内容准备好后，计划会由服务端按规则生成。</text></view>
+    <view v-else-if="!loading && !error && !needsProfile" class="empty ruankao-card"><text class="empty-title">今天没有待执行任务</text><text class="muted">当学习档案和内容准备好后，计划会由服务端按规则生成。</text></view>
     <text v-if="loading" class="status">加载今日计划…</text>
     <view v-if="error" class="error"><text>{{ error }}</text><button class="retry" @tap="load">重试</button></view>
   </view>

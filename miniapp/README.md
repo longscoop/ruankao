@@ -22,14 +22,16 @@ npm run check
 
 ## 配置
 
-`.env.local` 至少配置：
+本地开发可在 `.env.local` 配置 API 地址：
 
 ```bash
-VITE_API_BASE_URL=https://your-api.example.cn
+VITE_API_BASE_URL=
 VITE_API_TIMEOUT_MS=10000
 ```
 
-正式环境必须使用真实 HTTPS API 域名。微信 `appid` 请在发布环境/开发者工具中配置，不要把 AppSecret、支付密钥或 AI Key 提交到仓库。
+开发构建默认请求 `http://localhost:8080`，生产构建默认使用 `https://www.e68q.cn`。如果 `.env.local` 中设置了 `VITE_API_BASE_URL`，它会覆盖默认值；生产构建会拒绝 HTTP、localhost、IP 和示例地址。微信小程序 AppID 已在 `src/manifest.json` 的 `mp-weixin.appid` 配置为 `wx835c1ffe3a7ccb60`。不要把 AppSecret、支付密钥或 AI Key 提交到仓库。
+
+在微信开发者工具中导入构建目录后，到「详情 → 基本信息」确认 AppID 是 `wx835c1ffe3a7ccb60`；到「详情 → 域名信息」刷新，并确认 `https://www.e68q.cn` 出现在 **request 合法域名**中。后台新增域名后，刷新项目配置并重新编译；如果仍显示旧列表，重新打开项目。不要用「不校验合法域名」作为发布方案。
 
 ## 已实现页面
 

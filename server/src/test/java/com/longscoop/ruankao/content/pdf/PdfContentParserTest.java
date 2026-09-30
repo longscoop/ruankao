@@ -136,6 +136,17 @@ class PdfContentParserTest {
                 .anyMatch(x -> x.name().equals("大数据处理系统概述")));
     }
 
+    @Test
+    void repeatedHeadingOnNonAdjacentPagesKeepsDistinctLessonKeys() {
+        ParsedDocument document = parser.parse(List.of(
+                new ParsedPage(11, "架构设计概述\n第一段内容。", "pages/11.png"),
+                new ParsedPage(12, "设计原则\n第二段内容。", "pages/12.png"),
+                new ParsedPage(13, "架构设计概述\n第三段内容。", "pages/13.png")));
+
+        assertEquals(3, document.lessons().size());
+        assertEquals(3, document.lessons().stream().map(ParsedLesson::key).distinct().count());
+    }
+
 
     @Test
     void carriesTypicalQuestionAcrossPagesUntilAnswerAndExplanationArrive() {

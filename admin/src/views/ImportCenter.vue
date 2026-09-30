@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { listActiveExams, type ExamSummary } from '@/api/exams'
 import {
   aiSuggest, approveAll, approveItem, confirmImport, getImport, getPagePreviewUrl,
   listImports, publishKnowledge, publishLesson, publishQuestion, updateImportTitle,
   rejectItem, resolveIssue, updateItem, uploadPdf,
 } from '@/api/imports'
-import { parseKnowledgeIds, parseQuestionLinks } from '@/lib/import-review'
+import { parseKnowledgeIds, parseQuestionLinks, selectExamId } from '@/lib/import-review'
 import type { BatchSummary, ImportDetail, ImportItem } from '@/types/import'
 
 const examId = ref<number>()
+const exams = ref<ExamSummary[]>([])
 const file = ref<File>()
 const batches = ref<BatchSummary[]>([])
 const detail = ref<ImportDetail>()
@@ -56,6 +58,16 @@ async function refreshList() {
   batches.value = await listImports(examId.value)
 }
 
+async function initializeExams() {
+  try {
+    exams.value = await listActiveExams()
+    examId.value = selectExamId(examId.value, exams.value)
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '考试列表加载失败')
+  }
+  await refreshList()
+}
+
 async function selectBatch(batch: BatchSummary) {
   loading.value = true
   try {
@@ -89,7 +101,7 @@ function onFileChange(event: Event) {
 
 async function doUpload() {
   if (!examId.value || !file.value) {
-    ElMessage.warning('请先填写考试 ID 并选择 PDF')
+    ElMessage.warning('请先选择考试并选择 PDF')
     return
   }
   loading.value = true
@@ -214,7 +226,7 @@ async function resolve(issueId: number) {
   await refreshDetail()
 }
 
-onMounted(refreshList)
+onMounted(initializeExams)
 </script>
 
 <template>
@@ -239,8 +251,10 @@ onMounted(refreshList)
         />
 
         <el-form class="upload-form" label-position="top">
-          <el-form-item label="考试 ID">
-            <el-input-number v-model="examId" :min="1" controls-position="right" />
+          <el-form-item label="考试">
+            <el-select v-model="examId" placeholder="选择考试" style="width: 100%" @change="refreshList">
+              <el-option v-for="exam in exams" :key="exam.id" :label="exam.name" :value="exam.id" />
+            </el-select>
           </el-form-item>
           <el-form-item label="PDF 文件">
             <label class="file-picker">
