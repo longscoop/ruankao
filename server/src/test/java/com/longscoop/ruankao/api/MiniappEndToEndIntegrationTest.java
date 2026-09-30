@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -119,7 +120,11 @@ class MiniappEndToEndIntegrationTest extends PostgresIntegrationTest {
 
         mockMvc.perform(get("/api/v1/exams").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(examId));
+                // Flyway also seeds the V1 catalog; locate this fixture by identity, not position.
+                .andExpect(jsonPath("$[?(@.id == " + examId + ")].code")
+                        .value(contains("e2e-system-architect")))
+                .andExpect(jsonPath("$[?(@.id == " + examId + ")].name")
+                        .value(contains("系统架构设计师")));
 
         mockMvc.perform(put("/api/v1/users/me/exam-profile")
                         .header("Authorization", bearer(token))

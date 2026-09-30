@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,8 +58,11 @@ class WechatAuthenticationIntegrationTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/exams")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(examId))
-                .andExpect(jsonPath("$[0].name").value("System Architect"));
+                // Flyway also seeds the V1 catalog; locate this fixture by identity, not position.
+                .andExpect(jsonPath("$[?(@.id == " + examId + ")].code")
+                        .value(contains("auth-exam")))
+                .andExpect(jsonPath("$[?(@.id == " + examId + ")].name")
+                        .value(contains("System Architect")));
 
         mockMvc.perform(put("/api/v1/users/me/exam-profile")
                         .header("Authorization", "Bearer " + token)
